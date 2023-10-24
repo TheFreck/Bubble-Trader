@@ -42,10 +42,10 @@ export const TradingFloor = (props) => {
 
     const move = (trader) => {
         if (!trader.isAlive) return;
-        if (trader.x <= -50 || trader.x >= 150){
+        if (trader.x - trader.size/2 <= -50 || trader.x + trader.size/2 >= 150){
             trader.xSpeed *= -1;
         }
-        if (trader.y <= 0 || trader.y >= 100){
+        if (trader.y - trader.size <= 0 || trader.y + trader.size >= 100){
             trader.ySpeed *= -1;
         }
         trader.x += trader.xSpeed;
@@ -126,8 +126,8 @@ export const TradingFloor = (props) => {
                     isIn={t.isIn}
                     isGo={context.isRunning}
                     floorId={floorId}
+                    size={t.size}
                 >
-                    {/* {console.log(`FFFFFFFFFFFFFFFFFFFF\nrendering the trading floor from within\nFFFFFFFFFFFFFFFFFFF\nH-${context.rando}\nF-${floorId}`, context.isRunning)} */}
                 </Trader>
             )}
         </Suspense>,

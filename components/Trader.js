@@ -12,7 +12,8 @@ export const Trader = ({
     green = Math.random() * 255,
     blue = Math.random() * 255,
     isGo,
-    floorId
+    floorId,
+    size
 }) => {
 
     const context = useContext(TradingContext);
@@ -41,7 +42,8 @@ export const Trader = ({
             blue,
             portfolio,
             setPortfolio,
-            floorId
+            floorId,
+            size
         };
     },[]);
 
@@ -54,7 +56,7 @@ export const Trader = ({
         strokeWidth={.5}
         cx={`${myX}%`}
         cy={`${myY}%`}
-        r={5}
+        r={`${ref.current.size}%`}
     />
 
     const CircleCallback = useCallback(() => {

@@ -50,6 +50,7 @@ export const Home = () => {
         red: Math.random()*255,
         green: Math.random()*255,
         blue: Math.random()*255,
+        size: 5,
         isGo: false
       });
     }
