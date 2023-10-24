@@ -11,11 +11,11 @@ const rootElement = document.getElementById('root');
 const root = createRoot(rootElement);
 
 root.render(
-  <StrictMode>
+  // <StrictMode>
     <BrowserRouter basename={baseUrl}>
       <App />
     </BrowserRouter>
-  </StrictMode>
+  // </StrictMode>
 );
 
 // If you want your app to work offline and load faster, you can change

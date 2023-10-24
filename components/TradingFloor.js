@@ -1,21 +1,28 @@
 import react, { Suspense, useEffect, useRef, useState, useContext, useCallback } from 'react';
-import Asset from './Asset';
 import { Trader } from './Trader';
 import TradingContext from './TradingContext';
 import Podium from './Podium';
 
 export const TradingFloor = (props) => {
-    const { floorWidth, floorHeight,traderPlaceHolders } = props;
+    const { floorWidth, floorHeight, floorId } = props;
     const context = useContext(TradingContext);
-    const [militicks, setMiliticks] = useState(100);
-    useEffect(() => {
-    }, []);
+    const [traders,setTraders] = useState(context.traders);
+    const [militicks, setMiliticks] = useState(10);
+    const [connections, setConnections] = useState([]);
     const floorRef = useRef();
+
+    useEffect(() => {
+        floorRef.current.name = `Floor-${floorId}`;
+        return () => {
+            console.log("killing Trading Floor: ", context);
+        }
+    },[]);
 
     useEffect(() => {
         if (context.isRunning) {
             if (!context.intervalId) {
                 let intId = setInterval(march, militicks);
+                console.log("intId: ", intId);
                 context.setIntervalId(intId);
             }
         }
@@ -25,24 +32,51 @@ export const TradingFloor = (props) => {
         }
     }, [context.isRunning]);
 
-
     const march = () => {
-        if (context.isRunning) {
-            context.setTime(context.time++);
-            for(let [key,value] of Object.entries(context.traders)){
-                move(value);
-            }
-            const bounces = [];
-            for(let bounce of context.bounces){
-                if(bounce.names.length) continue;
-                else bounces.push(bounce);
-            }
-            context.setBounces(bounces);
+        for(let trader of traders){
+            setConnections([]);
+            move(trader);
         }
-        else {
-            console.log("stop marching");
+        context.setTraders(traders);
+    };
+
+    const move = (trader) => {
+        if (!trader.isAlive) return;
+        if (trader.x <= -50 || trader.x >= 150){
+            trader.xSpeed *= -1;
+        }
+        if (trader.y <= 0 || trader.y >= 100){
+            trader.ySpeed *= -1;
+        }
+        trader.x += trader.xSpeed;
+        trader.y += trader.ySpeed;
+        setTraders([...traders.filter(t => t.name !== trader.name),trader]);
+        findConnections();
+    };
+
+    const findConnections = () => {
+        for(let i=0; i<traders.length; i++){
+            for(let j=0; j<traders.length; j++){
+                if(traders[i].name===traders[j].name)continue;
+                let xDist = Math.pow(traders[i].x-traders[j].x,2);
+                let yDist = Math.pow(traders[i].y-traders[j].y,2);
+                let dist = Math.sqrt(xDist+yDist);
+                if(dist<50){
+                    setConnections([...connections,{
+                        names:[traders[i].name,traders[j].name],
+                        x1: traders[i].x,
+                        x2: traders[j].x,
+                        y1: traders[i].y,
+                        y2: traders[j].y,
+                        red: 100,
+                        green: 100,
+                        blue: 100
+                    }])
+                }
+            }
         }
     }
+
     // const getName = (chars, type) => {
     //     const alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
     //     const consonants = ['B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z'];
@@ -61,77 +95,48 @@ export const TradingFloor = (props) => {
     //     return name;
     // }
 
-    const move = (trader) => {
-        if (!trader.isAlive) return;
-        if (trader.x <= -50 || trader.x >= 150){
-            trader.xSpeed *= -1;
-            if(trader.xSpeed>=0 && trader.ySpeed>=0) //bottomRight
-            // console.log("bottom right angle: ", 90 * Math.abs(trader.ySpeed)/(Math.abs(trader.xSpeed)+Math.abs(trader.ySpeed)));
-            if(trader.xSpeed>=0 && trader.ySpeed<0) //bottomRight
-            // console.log("top right angle: ", 90 + 90 * Math.abs(trader.ySpeed)/(Math.abs(trader.xSpeed)+Math.abs(trader.ySpeed)));
-            if(trader.xSpeed<0 && trader.ySpeed>= 0) //topLeft
-            // console.log("bottom left angle: ", 180 + 90 * Math.abs(trader.ySpeed)/(Math.abs(trader.xSpeed)+Math.abs(trader.ySpeed)));
-            if(trader.xSpeed<0 && trader.ySpeed<0) //bottomLeft
-            // console.log("top left angle: ", 270 + 90 * Math.abs(trader.ySpeed)/(Math.abs(trader.xSpeed)+Math.abs(trader.ySpeed)));
-            console.log(trader.xSpeed,trader.ySpeed);
-        }
-        if (trader.y <= 0 || trader.y >= 100){
-            trader.ySpeed *= -1;
-            if(trader.xSpeed>=0 && trader.ySpeed>=0) //bottomRight
-            // console.log("bottom right angle: ", 90 * Math.abs(trader.ySpeed)/(Math.abs(trader.xSpeed)+Math.abs(trader.ySpeed)));
-            if(trader.xSpeed>=0 && trader.ySpeed<0) //bottomRight
-            // console.log("top right angle: ", 90 + 90 * Math.abs(trader.ySpeed)/(Math.abs(trader.xSpeed)+Math.abs(trader.ySpeed)));
-            if(trader.xSpeed<0 && trader.ySpeed>= 0) //topLeft
-            // console.log("bottom left angle: ", 180 + 90 * Math.abs(trader.ySpeed)/(Math.abs(trader.xSpeed)+Math.abs(trader.ySpeed)));
-            if(trader.xSpeed<0 && trader.ySpeed<0) //bottomLeft
-            // console.log("top left angle: ", 270 + 90 * Math.abs(trader.ySpeed)/(Math.abs(trader.xSpeed)+Math.abs(trader.ySpeed)));
-            console.log(trader.xSpeed,trader.ySpeed);
-        }
-        trader.x += trader.xSpeed;
-        trader.y += trader.ySpeed;
-    }
+    // const move = (tr) => {
+    //     let trader = context.traders.find(t => t.name === tr);
+    //     if (!trader.isAlive) return;
+    //     if (trader.x <= -50 || trader.x >= 150){
+    //         trader.xSpeed *= -1;
+    //     }
+    //     if (trader.y <= 0 || trader.y >= 100){
+    //         trader.ySpeed *= -1;
+    //     }
+    //     trader.x += trader.xSpeed;
+    //     trader.y += trader.ySpeed;
+    //     updateTraders(trader);
+    // }
 
     const TraderCallback = useCallback(()=> 
         <Suspense fallback={null} key={"suspense-"}>
-            {context.traders && context.traders.length > 0 && context.traders.map((t, i) =>
+            {context.floorId && context.traders && context.traders.length > 0 && context.traders.map((t, i) =>
                 <Trader
                     key={i}
                     index={i}
                     name={t.name}
                     xSpeed={t.xSpeed}
                     ySpeed={t.ySpeed}
-                    x={t.x+t.xSpeed}
-                    y={t.y+t.ySpeed}
+                    x={t.x}
+                    y={t.y}
                     red={t.red}
                     green={t.green}
                     blue={t.blue}
                     isIn={t.isIn}
+                    isGo={context.isRunning}
+                    floorId={floorId}
                 >
-                    {console.log("t.isIn: ", t.isIn)}
+                    {/* {console.log(`FFFFFFFFFFFFFFFFFFFF\nrendering the trading floor from within\nFFFFFFFFFFFFFFFFFFF\nH-${context.rando}\nF-${floorId}`, context.isRunning)} */}
                 </Trader>
             )}
-            {context.traders?.length <= 0 && traderPlaceHolders &&
-            traderPlaceHolders.map((t, i) =>
-                <Trader
-                    key={i}
-                    index={i}
-                    name={t}
-                    x={20}
-                    y={50}
-                    xSpeed={.3}
-                    ySpeed={-.1}
-                    red={Math.random()*255}
-                    green={Math.random()*255}
-                    blue={Math.random()*255}
-                />
-            )}
         </Suspense>,
-    [context]);
+    [context.floorId,context.isRunning,traders]);
 
     const ConnectionsCallback = useCallback(() => 
     <Suspense fallback={null}>
         {
-                context.connections && context.connections.map((c,j) => 
+                connections && connections.map((c,j) => 
                     <line 
                         key={j} 
                         names={c.names} 
@@ -144,6 +149,16 @@ export const TradingFloor = (props) => {
                     />
                 )
             }
+    </Suspense>
+    ,[connections]);
+
+    const PodiumCallback = useCallback(() => 
+    <Suspense fallback={null}>
+        <Podium 
+            name='ABC'
+            shareQty={1000}
+            startingPrice={20}
+        />
     </Suspense>
     ,[context.connections]);
 
@@ -158,11 +173,7 @@ export const TradingFloor = (props) => {
                 xmlns="http://www.w3.org/2000/svg"
                 style={{ background: 'black' }}
             >
-                <Podium 
-                    name='ABC'
-                    shareQty={1000}
-                    startingPrice={20}
-                />
+                <PodiumCallback />
                 <TraderCallback />
                 <ConnectionsCallback />
             </svg>

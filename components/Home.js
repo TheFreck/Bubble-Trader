@@ -7,34 +7,69 @@ export const Home = () => {
   const floorWidth = 90;
   const floorHeight = 90;
   const [isRunning, setIsRunning] = useState(false);
-  const [intervalId, setIntervalId] = useState(0);
-  const [nTraders, setNtraders] = useState(1);
+  const [nTraders, setNtraders] = useState(2);
   const [traders, setTraders] = useState([]);
-  const [traderPlaceHolders, setTraderPlaceHolders] = useState([]);
   const [time,setTime]=useState(0);
   const [connections, setConnections]=useState([]);
   const [bounces, setBounces]=useState([]);
   const [podiums, setPodiums] = useState([]);
+  const [tradingFloor,setTradingFloor] = useState(0);
+  const [complete, setComplete] = useState(false);
+  const [rando,setRando] = useState(Math.floor(Math.random()*10));
+  const [floorId, setFloorId] = useState(Math.floor(Math.random()*100));
+  const [floorCounter, setFloorCounter] = useState(0);
+  const [traderCounter, setTraderCounter] = useState(0);
+  const [intervalId,setIntervalId] = useState(0);
 
   useEffect(() => {
-    getTraders();
+    console.log("H*H*H*H*H*H*H*H*H*H*H*H*H*H*H*H\nHOME\nH*H*H*H*H*H*H*H*H*H*H*H*H*H*H*H\nH: ", rando);
+    getTraders(() => setComplete(true));
   }, []);
 
   useEffect(() => {
-    console.log("trader updated: ", traders);
-  },[traders]);
-
-  useEffect(() => {
+    if(isRunning) console.log("++++++++++++++++++++\n+ turning it on +\n++++++++++++++++++++");
+    else console.log("--------------------\n- turning it off -\n--------------------")
   },[isRunning]);
 
-  const getTraders = () => {
+  const getTraders = (cb) => {
     if(traders.length) return;
     let stageTraders = [];
     for (let i = 0; i < nTraders; i++) {
-      stageTraders.push(`Trader-${i}`);
+      stageTraders.push({
+        name: `Trader-${i}`,
+        isAlive: true,
+        isIn: false,
+        xSpeed: (Math.random()*2-1)/5,
+        ySpeed: (Math.random()*2-1)/5,
+        // xSpeed: .25,
+        // ySpeed: .5,
+        x: Math.random()*200-50,
+        y: Math.random()*100,
+        // x: 50,
+        // y:50,
+        red: Math.random()*255,
+        green: Math.random()*255,
+        blue: Math.random()*255,
+        isGo: false
+      });
     }
-    setTraderPlaceHolders(stageTraders);
+    setTraders(stageTraders);
+    cb();
   }
+
+  const TradingFloorCallback = useCallback(() => 
+    <TradingFloor
+      floorWidth={floorWidth}
+      floorHeight={floorHeight}
+      floorId={floorId}
+    >
+      {
+        // console.log(`HwHwHwHwHwHwHwHwHwH\nrendering Trading Floor from without\nHwHwHwHwHwHwHwHwHwH\nH-${rando}\nF-${floorId}`)
+      }
+      </TradingFloor>
+  ,
+    [floorId]
+  );
 
   return (
     <>
@@ -50,22 +85,24 @@ export const Home = () => {
       <button onClick={() => setIsRunning(!isRunning)} >{isRunning ? 'STOP' : 'START'}</button>
         <TradingContext.Provider 
           value={{
-              traders,setTraders,
-              intervalId,setIntervalId,
-              isRunning,setIsRunning,
-              time,setTime,
-              connections,setConnections,
-              bounces,setBounces,
-              podiums,setPodiums
-            }}
+            traders,setTraders,
+            isRunning,
+            time,setTime,
+            connections,setConnections,
+            bounces,setBounces,
+            podiums,setPodiums,
+            tradingFloor,setTradingFloor,
+            rando,floorId,
+            floorCounter,setFloorCounter,
+            traderCounter,setTraderCounter,
+            intervalId,setIntervalId
+          }}
           >
+          {complete &&
           <Suspense fallback={null}>
-          <TradingFloor
-            floorWidth={floorWidth}
-            floorHeight={floorHeight}
-            traderPlaceHolders={traderPlaceHolders}
-          />
+            <TradingFloorCallback />
           </Suspense>
+        }
         </TradingContext.Provider>
       </div>
     </>
