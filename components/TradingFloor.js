@@ -2,17 +2,72 @@ import react, { Suspense, useEffect, useRef, useState, useContext, useCallback }
 import { Trader } from './Trader';
 import TradingContext from './TradingContext';
 import Podium from './Podium';
+import { Diamond } from './Diamond';
 
 export const TradingFloor = (props) => {
     const { floorWidth, floorHeight, floorId } = props;
     const context = useContext(TradingContext);
     const [traders,setTraders] = useState(context.traders);
-    const [militicks, setMiliticks] = useState(10);
+    const [militicks, setMiliticks] = useState(5);
     const [connections, setConnections] = useState([]);
+    const [diamonds, setDiamonds] = useState([]);
+    const [points, setPoints] = useState([]);
+    const slopes = [
+        (x,y) => {
+            if(x >= points[3].x && x <= points[0].x){
+                // left
+                return y <= x * (points[3].y-points[0].y)/(points[3].x-points[0].x) + points[3].y
+            }
+            else if(x >= points[0].x && x <= points[1].x){
+                // right
+                return y <= x * (points[0].y-points[1].y)/(points[0].x-points[1].x) + points[0].y + points[1].y
+            }
+            else return true;
+        },
+        (x,y) => {
+            if(x >= points[3].x && x <= points[0].x){
+                // left
+                return y >= x * (points[3].y-points[0].y)/(points[3].x-points[0].x) + points[3].y
+            }
+            else if(x >= points[0].x && x <= points[1].x){
+                // right
+                return y >= x * (points[0].y-points[1].y)/(points[0].x-points[1].x) + points[0].y + points[1].y
+            }
+            else return true;
+        }
+    ];
     const floorRef = useRef();
 
     useEffect(() => {
         floorRef.current.name = `Floor-${floorId}`;
+        const pts = [
+            {
+                // top
+                x: 1,
+                y: 49
+            },
+            {
+                // right
+                x: 49,
+                y: 1
+            },
+            {
+                // bottom
+                x: 99,
+                y: 49
+            },
+            {
+                // left
+                x: 49,
+                y: 99
+            }
+        ];
+        setPoints(pts);
+
+        setDiamonds([{
+            points,
+            slopes
+        }]);
         return () => {
             console.log("killing Trading Floor: ", context);
         }
@@ -42,12 +97,51 @@ export const TradingFloor = (props) => {
 
     const move = (trader) => {
         if (!trader.isAlive) return;
+        for(let podium of context.podiums){
+            // podium left
+            if(trader.x + trader.size >= podium.left
+            && trader.x + trader.size <= podium.left + trader.size 
+            && trader.y >= podium.top - 1
+            && trader.y <= podium.bottom + 1
+            && trader.xSpeed > 0){
+                console.log("left");
+                trader.xSpeed *= -1;
+            }
+            // podium right
+            if(trader.x - trader.size <= podium.right
+            && trader.x - trader.size >= podium.right - trader.size 
+            && trader.y >= podium.top - 1
+            && trader.y <= podium.bottom + 1
+            && trader.xSpeed < 0) {
+                console.log("right");
+                trader.xSpeed *= -1;
+            }
+            // podium top
+            if(trader.y + trader.size >= podium.top
+            && trader.y + trader.size <= podium.top + trader.size
+            && trader.x >= podium.left - 1
+            && trader.x <= podium.right + 1
+            && trader.ySpeed > 0) {
+                console.log("top");
+                trader.ySpeed *= -1;
+            }
+            // podium bottom
+            if(trader.y - trader.size <= podium.bottom
+            && trader.y - trader.size >= podium.bottom - trader.size
+            && trader.x >= podium.left - 1
+            && trader.x <= podium.right + 1
+            && trader.ySpeed < 0) {
+                console.log("bottom");
+                trader.ySpeed *= -1;
+            }
+        }
         if (trader.x - trader.size/2 <= -50 || trader.x + trader.size/2 >= 150){
             trader.xSpeed *= -1;
         }
         if (trader.y - trader.size <= 0 || trader.y + trader.size >= 100){
             trader.ySpeed *= -1;
         }
+        bounce(trader);
         trader.x += trader.xSpeed;
         trader.y += trader.ySpeed;
         setTraders([...traders.filter(t => t.name !== trader.name),trader]);
@@ -55,6 +149,7 @@ export const TradingFloor = (props) => {
     };
 
     const findConnections = () => {
+        const connects = [];
         for(let i=0; i<traders.length; i++){
             for(let j=0; j<traders.length; j++){
                 if(traders[i].name===traders[j].name)continue;
@@ -62,7 +157,7 @@ export const TradingFloor = (props) => {
                 let yDist = Math.pow(traders[i].y-traders[j].y,2);
                 let dist = Math.sqrt(xDist+yDist);
                 if(dist<50){
-                    setConnections([...connections,{
+                    connects.push({
                         names:[traders[i].name,traders[j].name],
                         x1: traders[i].x,
                         x2: traders[j].x,
@@ -71,43 +166,40 @@ export const TradingFloor = (props) => {
                         red: 100,
                         green: 100,
                         blue: 100
-                    }])
+                    });
                 }
+            }
+        }
+        setConnections(connects);
+    }
+
+    const bounce = () => {
+        let collisions = [];
+        for(let trader of traders){
+            if(!slopes[0](trader.x,trader.y)){
+                // bounce
+                console.log("bounce");
+
             }
         }
     }
 
-    // const getName = (chars, type) => {
-    //     const alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
-    //     const consonants = ['B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z'];
-    //     const vowels = ['A', 'E', 'I', 'O', 'U'];
-    //     let name = '';
-    //     if (type === 'ticker') {
-    //         for (let i = 0; i < chars; i++) {
-    //             name += Math.random(alphabet);
-    //         }
-    //     }
-    //     else if (type === 'name') {
-    //         for (let i = 0; i < chars; i++) {
-    //             name += Math.random(i % 2 ? consonants : vowels);
-    //         }
-    //     }
-    //     return name;
-    // }
-
-    // const move = (tr) => {
-    //     let trader = context.traders.find(t => t.name === tr);
-    //     if (!trader.isAlive) return;
-    //     if (trader.x <= -50 || trader.x >= 150){
-    //         trader.xSpeed *= -1;
-    //     }
-    //     if (trader.y <= 0 || trader.y >= 100){
-    //         trader.ySpeed *= -1;
-    //     }
-    //     trader.x += trader.xSpeed;
-    //     trader.y += trader.ySpeed;
-    //     updateTraders(trader);
-    // }
+    const PodiumCallback = useCallback(() => 
+    <Suspense fallback={null}>
+        {context.floorId && context.podiums && context.podiums.map((p,i) => 
+            <Podium 
+                key={i}
+                name={p.name}
+                shareQty={1000}
+                startingPrice={20}
+                top={p.top}
+                bottom={p.bottom}
+                right={p.right}
+                left={p.left}
+            />
+        )}
+    </Suspense>
+    ,[context.connections]);
 
     const TraderCallback = useCallback(()=> 
         <Suspense fallback={null} key={"suspense-"}>
@@ -152,15 +244,14 @@ export const TradingFloor = (props) => {
     </Suspense>
     ,[connections]);
 
-    const PodiumCallback = useCallback(() => 
-    <Suspense fallback={null}>
-        <Podium 
-            name='ABC'
-            shareQty={1000}
-            startingPrice={20}
-        />
-    </Suspense>
-    ,[context.connections]);
+    const DiamondCallback = useCallback(() => {
+        if(!points.length & !slopes.length) return;
+        console.log(points,slopes);
+        return <Diamond 
+            points={points}
+            slopes={slopes}
+        />}
+    ,[diamonds]);
 
     return (
         <div
@@ -173,9 +264,10 @@ export const TradingFloor = (props) => {
                 xmlns="http://www.w3.org/2000/svg"
                 style={{ background: 'black' }}
             >
-                <PodiumCallback />
+                {/* <PodiumCallback /> */}
                 <TraderCallback />
                 <ConnectionsCallback />
+                {/* <DiamondCallback /> */}
             </svg>
         </div>
     )

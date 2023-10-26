@@ -2,19 +2,22 @@ import React, { useState, Suspense, useCallback, useEffect } from 'react';
 import TradingFloor from './TradingFloor';
 import TradingContext from './TradingContext';
 import { Trader } from './Trader';
+import HomeHelpers from './HomeHelpers';
 
 export const Home = () => {
   const floorWidth = 90;
   const floorHeight = 90;
   const [isRunning, setIsRunning] = useState(false);
-  const [nTraders, setNtraders] = useState(2);
+  const [nTraders, setNtraders] = useState(10);
   const [traders, setTraders] = useState([]);
   const [time,setTime]=useState(0);
   const [connections, setConnections]=useState([]);
   const [bounces, setBounces]=useState([]);
+  const [nAssets, setNassets] = useState(0);
   const [podiums, setPodiums] = useState([]);
   const [tradingFloor,setTradingFloor] = useState(0);
-  const [complete, setComplete] = useState(false);
+  const [tradersComplete, setTradersComplete] = useState(false);
+  const [assetsComplete, setAssetsComplete] = useState(false);
   const [rando,setRando] = useState(Math.floor(Math.random()*10));
   const [floorId, setFloorId] = useState(Math.floor(Math.random()*100));
   const [floorCounter, setFloorCounter] = useState(0);
@@ -23,7 +26,14 @@ export const Home = () => {
 
   useEffect(() => {
     console.log("H*H*H*H*H*H*H*H*H*H*H*H*H*H*H*H\nHOME\nH*H*H*H*H*H*H*H*H*H*H*H*H*H*H*H\nH: ", rando);
-    getTraders(() => setComplete(true));
+    HomeHelpers.getAssets(nAssets,(pods) => {
+      setPodiums(pods);
+      setAssetsComplete(true);
+      HomeHelpers.getTraders(pods,nTraders,(trdrs) => {
+        setTraders(trdrs);
+        setTradersComplete(true);
+      });
+    });
   }, []);
 
   useEffect(() => {
@@ -31,32 +41,6 @@ export const Home = () => {
     else console.log("--------------------\n- turning it off -\n--------------------")
   },[isRunning]);
 
-  const getTraders = (cb) => {
-    if(traders.length) return;
-    let stageTraders = [];
-    for (let i = 0; i < nTraders; i++) {
-      stageTraders.push({
-        name: `Trader-${i}`,
-        isAlive: true,
-        isIn: false,
-        xSpeed: (Math.random()*2-1)/5,
-        ySpeed: (Math.random()*2-1)/5,
-        // xSpeed: .25,
-        // ySpeed: .5,
-        x: Math.random()*200-50,
-        y: Math.random()*100,
-        // x: 50,
-        // y:50,
-        red: Math.random()*255,
-        green: Math.random()*255,
-        blue: Math.random()*255,
-        size: 5,
-        isGo: false
-      });
-    }
-    setTraders(stageTraders);
-    cb();
-  }
 
   const TradingFloorCallback = useCallback(() => 
     <TradingFloor
@@ -99,7 +83,7 @@ export const Home = () => {
             intervalId,setIntervalId
           }}
           >
-          {complete &&
+          {tradersComplete && assetsComplete &&
           <Suspense fallback={null}>
             <TradingFloorCallback />
           </Suspense>

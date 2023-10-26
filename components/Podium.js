@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import TradingContext from "./TradingContext";
 
-export const Podium = ({name,shareQty,startingPrice}) => {
+export const Podium = ({name,shareQty,startingPrice,top,right,bottom,left}) => {
     const context = useContext(TradingContext);
     const [assetName,setAssetName] = useState(name);
     const [bid,setBid] = useState(startingPrice);
@@ -11,10 +11,10 @@ export const Podium = ({name,shareQty,startingPrice}) => {
     const [sharesOutstanding, setSharesOutstanding] = useState(0);
     const [sharesAvailable, setSharesAvailable] = useState(shareQty);
     const [cashOnHand, setCashOnHand] = useState(200000);
-    const [top,setTop] = useState(25);
-    const [right, setRight] = useState(75);
-    const [bottom, setBottom] = useState(75);
-    const [left, setLeft] = useState(25);
+    const [topEdge, setTopEdge] = useState(top);
+    const [rightEdge, setRightEdge] = useState(right);
+    const [bottomEdge, setBottomEdge] = useState(bottom);
+    const [leftEdge, setLeftEdge] = useState(left);
     const [traders, setTraders] = useState([]);
 
     const assetRef = useRef();
@@ -32,15 +32,14 @@ export const Podium = ({name,shareQty,startingPrice}) => {
             sharesOutstanding,
             sharesAvailable,
             cashOnHand,
-            top,
-            right,
-            bottom,
-            left,
+            top:topEdge,
+            right:rightEdge,
+            bottom:bottomEdge,
+            left:leftEdge,
             traders,
             buy,
             sell
         }
-        context.setPodiums([...context.podiums,assetRef.current]);
     },[]);
 
     const buy = (buyer,shares) => {
@@ -89,10 +88,10 @@ export const Podium = ({name,shareQty,startingPrice}) => {
 
     return <rect
         ref={assetRef}
-        x={left}
-        y={top}
-        width={right-left}
-        height={bottom-top}
+        x={leftEdge}
+        y={topEdge}
+        width={rightEdge-leftEdge}
+        height={bottomEdge-topEdge}
         stroke={'red'}
         fill={'orange'}
     />

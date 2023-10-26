@@ -13,7 +13,8 @@ export const Trader = ({
     blue = Math.random() * 255,
     isGo,
     floorId,
-    size
+    size,
+    showDirection
 }) => {
 
     const context = useContext(TradingContext);
@@ -59,10 +60,16 @@ export const Trader = ({
         r={`${ref.current.size}%`}
     />
 
+    const Direction = () => <line x1={myX} y1={myY} x2={myX+xSpeed*100} y2={myY+ySpeed*100} stroke={'red'} />
+
     const CircleCallback = useCallback(() => {
         if(!ref.current) return <div/>;
         return (
-            <Circle />
+            <>
+                <Circle />
+                <Direction />
+            </>
+
         )
     },[ref]);
 
