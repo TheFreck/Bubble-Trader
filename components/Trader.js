@@ -1,4 +1,4 @@
-import react, { useEffect, useRef, useState, useContext, useCallback } from 'react';
+import react, { useEffect, useRef, useState, useContext, useCallback, Suspense } from 'react';
 import TradingContext from './TradingContext';
 
 export const Trader = ({
@@ -13,8 +13,10 @@ export const Trader = ({
     blue = Math.random() * 255,
     isGo,
     floorId,
-    size,
-    showDirection
+    size=5,
+    showDirection,
+    isAlive,
+    aim=0
 }) => {
 
     const context = useContext(TradingContext);
@@ -22,16 +24,19 @@ export const Trader = ({
     const [cash, setCash] = useState(10000);
     const [myX,setMyX] = useState(x);
     const [myY,setMyY] = useState(y);
+    const [myAim, setMyAim] = useState(aim);
+    const [mySize, setMySize] = useState(size);
+    const [myName, setMyName] = useState(name);
 
     const ref = useRef();
 
     useEffect(() => {
-        if (name === 'Trader-Joe') return;
+        if (name === 'Trader-Joe' || !red || !green || !blue) return;
         setMyX(x+xSpeed);
         setMyY(y+ySpeed);
         ref.current = {
             ...ref.current,
-            name,
+            name:myName,
             xSpeed,
             ySpeed,
             cash,
@@ -44,32 +49,47 @@ export const Trader = ({
             portfolio,
             setPortfolio,
             floorId,
-            size
+            aim:myAim,
+            size: mySize,
+            isAlive
         };
     },[]);
 
-    const Circle = () => <circle
-        ref={ref}
-        key={ref.current.name}
-        name={ref.current.name}
-        fill={`rgb(${ref.current.red},${ref.current.green},${ref.current.blue})`}
-        stroke={`rgb(${ref.current.red * .5},${ref.current.green * .5},${ref.current.blue * .5})`}
-        strokeWidth={.5}
-        cx={`${myX}%`}
-        cy={`${myY}%`}
-        r={`${ref.current.size}%`}
-    />
+    const Circle = () => (
+        <circle
+            ref={ref}
+            key={ref.current.name}
+            name={ref.current.name}
+            fill={`rgb(${ref.current.red},${ref.current.green},${ref.current.blue})`}
+            stroke={`rgb(${ref.current.red * .5},${ref.current.green * .5},${ref.current.blue * .5})`}
+            strokeWidth={.5}
+            cx={`${myX}%`}
+            cy={`${myY}%`}
+            r={`${ref.current.size ? ref.current.size : 5}%`}
+            transform={`rotate(${myAim?myAim:0},${myX?myX:0},${myY?myY:0})`}
+        />
+    );
 
-    const Direction = () => <line x1={myX} y1={myY} x2={myX+xSpeed*100} y2={myY+ySpeed*100} stroke={'red'} />
+    const Direction = () => (
+        <polygon 
+            points={
+                `${(myX?myX:0)+mySize*Math.cos(Math.PI)},${(myY?myY:0)} 
+                ${(myX?myX:0)},${(myY?myY:0)-mySize} 
+                ${(myX?myX:0)-mySize*Math.cos(Math.PI)},${(myY?myY:0)}`
+            } 
+            // stroke='salmon'
+            fill={'plum'} 
+            transform={`rotate(${myAim?myAim:0},${myX?myX:0},${myY?myY:0})`}
+        />
+    );
 
     const CircleCallback = useCallback(() => {
         if(!ref.current) return <div/>;
         return (
-            <>
+            <Suspense fallback={null}>
                 <Circle />
                 <Direction />
-            </>
-
+            </Suspense>
         )
     },[ref]);
 

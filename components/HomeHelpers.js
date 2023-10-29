@@ -24,30 +24,30 @@ export const helpers = {
             do {
                 coords.x = Math.random() * 190 - 45;
                 coords.y = Math.random() * 90 + 5;
-                console.log("coords: ", coords);
             } while (!validateCoords(coords));
             return coords;
         }
         let stageTraders = [];
         for (let i = 0; i < nTraders; i++) {
             const position = getCoords();
+            // let xSpeed = Math.random()*.5-.25;
+            // let ySpeed = Math.random()*.5-.25;
+            let xSpeed = .5;
+            let ySpeed = 0;
             stageTraders.push({
                 name: `Trader-${i}`,
-                isAlive: true,
                 isIn: false,
-                xSpeed: (Math.random() * 2 - 1) / 5,
-                ySpeed: (Math.random() * 2 - 1) / 5,
-                // xSpeed: .25,
-                // ySpeed: .5,
-                x: position.x,
-                y: position.y,
-                // x: 50,
-                // y:50,
-                red: Math.random() * 255,
-                green: Math.random() * 255,
-                blue: Math.random() * 255,
+                xSpeed,
+                ySpeed,
+                x: i%2 ? 30 : 50,
+                y:i%2 ? 57.5 : 50,
+                isAlive: i%2 ? true : false,
+                red:99,
+                green:56,
+                blue: 99,
                 size: 5,
-                isGo: false
+                isGo: false,
+                aim: ySpeed === 0 ? 0 : (ySpeed>=0 ? 180 - Math.atan(xSpeed/ySpeed)/Math.PI*180 : 180 - Math.atan(xSpeed/ySpeed)/Math.PI*180 + 180)
             });
         }
         cb(stageTraders);
