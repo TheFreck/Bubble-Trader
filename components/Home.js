@@ -7,7 +7,7 @@ import HomeHelpers from './HomeHelpers';
 export const Home = () => {
   const floorWidth = 90;
   const floorHeight = 90;
-  const [isRunning, setIsRunning] = useState(true);
+  const [isRunning, setIsRunning] = useState(false);
   const [nTraders, setNtraders] = useState(2);
   const [traders, setTraders] = useState([]);
   const [time,setTime]=useState(0);
@@ -71,7 +71,7 @@ export const Home = () => {
         <TradingContext.Provider 
           value={{
             traders,setTraders,
-            isRunning,
+            isRunning,setIsRunning,
             time,setTime,
             connections,setConnections,
             bounces,setBounces,

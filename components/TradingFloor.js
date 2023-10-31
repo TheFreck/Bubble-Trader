@@ -3,7 +3,7 @@ import { Trader } from './Trader';
 import TradingContext from './TradingContext';
 import Podium from './Podium';
 import { Diamond } from './Diamond';
-import { isTypeQueryNode } from 'typescript';
+import { isFunctionDeclaration, isTypeQueryNode } from 'typescript';
 
 export const TradingFloor = (props) => {
     const { floorWidth, floorHeight, floorId } = props;
@@ -96,6 +96,11 @@ export const TradingFloor = (props) => {
         context.setTraders(traders);
     };
 
+    useEffect(() => {
+        if(connections.length)
+        console.log("connections updated: ", connections);
+    },[connections]);
+
     const move = (trader) => {
         if (!trader.isAlive) return;
         for (let podium of context.podiums) {
@@ -145,13 +150,18 @@ export const TradingFloor = (props) => {
         }
 
         findConnections(pos => {
-            setConnections(pos);
-            if (pos.length) {
-                console.log("trader aim: ", trader.aim+90);
-                let change = trader.aim + (trader.aim+90 - pos.find(p => p.type === 'normal').angle);
-                console.log("change: ", change);
-                trader.aim += change;
-                debugger;
+            if (connections.length || pos.length) {
+                console.log(trader.name);
+                for(let po of pos){
+                    connections.push(po);
+                }
+                setConnections(connections);
+                let aimAdjustment = (trader.aim - pos.find(p => p.names.includes(trader.name) && p.type === 'normal')?.angle + 180)%360;
+                let aimRadians = ((trader.aim/360)*Math.PI*2)%Math.PI;
+                trader.aim += aimAdjustment;
+                const preMagnitude = Math.sqrt(trader.xSpeed * trader.xSpeed + trader.ySpeed * trader.ySpeed);
+                trader.xSpeed = Math.sin(aimRadians) * preMagnitude;
+                trader.ySpeed = Math.round(Math.cos(aimRadians) * preMagnitude,.001);
             }
             trader.x += trader.xSpeed;
             trader.y += trader.ySpeed;
@@ -159,23 +169,28 @@ export const TradingFloor = (props) => {
             setTraders([...traders.filter(t => t.name !== trader.name), trader]);
         });
     };
+    useEffect(() => {
+        console.log("connections changed: ", connections);
+    },[connections]);
 
     const findConnections = (cb) => {
         const connects = [];
+        let trader;
         for (let i = 0; i < traders.length; i++) {
             if(!traders[i].isAlive) continue;
+            trader = traders[i];
             for (let j = 0; j < traders.length; j++) {
                 if (traders[i].name === traders[j].name) continue;
                 let xDist = Math.pow(traders[i].x - traders[j].x, 2);
                 let yDist = Math.pow(traders[i].y - traders[j].y, 2);
                 let dist = Math.sqrt(xDist + yDist);
                 if (dist < 11) {
-                    if (!connects.find(c => c.name === traders[i].name)) {
+                    if (!connects.find(c => c.names.includes(traders[i].name) && c.names.includes(traders[j].name) && c.type === 'normal')) {
                         let slope = (traders[j].y-traders[i].y)/(traders[j].x-traders[i].x);
-                        let angle = Math.atan(slope)/Math.PI*180;
+                        let angle = (Math.atan(slope)/Math.PI*180+90);
                         connects.push({
                             names: [traders[i].name, traders[j].name],
-                            type: 'wall',
+                            type: 'normal',
                             slope,
                             x1: traders[i].x,
                             x2: traders[j].x,
@@ -186,16 +201,18 @@ export const TradingFloor = (props) => {
                             blue: 0,
                             angle
                         });
-                        slope = (traders[j].y - traders[i].x) / (traders[i].y - traders[j].x);
-                        angle = (Math.atan(slope)/Math.PI*180);
+                    }
+                    if (!connects.find(c => c.names.includes(traders[i].name) && c.names.includes(traders[j].name) && c.type === 'wall')){
+                        let slope = (traders[j].y - traders[i].x) / (traders[i].y - traders[j].x);
+                        let angle = (Math.atan(slope)/Math.PI*180);
                         connects.push({
-                            // names: [traders[i].name, traders[j].name],
-                            type: 'normal',
+                            names: [traders[i].name, traders[j].name],
+                            type: 'wall',
                             slope,
                             x1: traders[j].x,
                             x2: traders[i].y,
-                            y1: traders[i].x,
-                            y2: traders[j].y,
+                            y1: -traders[i].x,
+                            y2: -traders[j].y,
                             red: 0,
                             green: 255,
                             blue: 0,
@@ -258,9 +275,10 @@ export const TradingFloor = (props) => {
     const ConnectionsCallback = useCallback(() =>
         <Suspense fallback={null}>
             {
-                connections && connections.map((c, j) =>
+                connections && connections.length && connections.map((c, j) =>
                     <line
                         key={j}
+                        type={c.type}
                         names={c.names}
                         x1={c.x1}
                         x2={c.x2}

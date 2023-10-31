@@ -30,24 +30,28 @@ export const helpers = {
         let stageTraders = [];
         for (let i = 0; i < nTraders; i++) {
             const position = getCoords();
+            let x = i%2 ? 60 : 40;
+            let y = i%2 ? 50 : 50;
+            // let x = position.x;
+            // let y = position.y;
             // let xSpeed = Math.random()*.5-.25;
             // let ySpeed = Math.random()*.5-.25;
-            let xSpeed = .5;
+            let xSpeed = i%2 ? -.1 : .1;
             let ySpeed = 0;
             stageTraders.push({
                 name: `Trader-${i}`,
                 isIn: false,
                 xSpeed,
                 ySpeed,
-                x: i%2 ? 30 : 50,
-                y:i%2 ? 57.5 : 50,
-                isAlive: i%2 ? true : false,
+                x,
+                y,
+                isAlive: true,
                 red:99,
                 green:56,
                 blue: 99,
                 size: 5,
                 isGo: false,
-                aim: ySpeed === 0 ? 0 : (ySpeed>=0 ? 180 - Math.atan(xSpeed/ySpeed)/Math.PI*180 : 180 - Math.atan(xSpeed/ySpeed)/Math.PI*180 + 180)
+                aim: xSpeed === 0 ? ySpeed >= 0 ? 0 : 180 : (ySpeed>=0 ? 180 - Math.atan(xSpeed/ySpeed)/Math.PI*180 : 180 - Math.atan(xSpeed/ySpeed)/Math.PI*180 + 180)
             });
         }
         cb(stageTraders);
