@@ -3,13 +3,14 @@ export const helpers = {
     getTraders: (assets, nTraders, cb) => {
         const availableXs = [200, -200];
         const availableYs = [200, -200];
+        const taken = [];
         for (let asset of assets) {
             availableXs[0] = Math.min(availableXs[0], asset.left - 5);
             availableXs[1] = Math.max(availableXs[1], asset.right + 5);
             availableYs[0] = Math.min(availableYs[0], asset.top - 5);
             availableYs[1] = Math.max(availableYs[1], asset.bottom + 5);
         }
-        const validateCoords = ({ x, y }) => {
+        const validateCoordsAgainstPodiums = ({ x, y }) => {
             if (x === null || y === null) return false;
             let xPass = true;
             let yPass = true;
@@ -18,40 +19,51 @@ export const helpers = {
             if (xPass || yPass) return true;
             else return false;
         }
+        const validateCoordsAgainstTraders = ({x,y}) => {
+            for(let cd of taken){
+                let dist = Math.sqrt(Math.pow(x-cd.x,2)+Math.pow(y-cd.y,2));
+                if(dist < 11) {
+                    return false;
+                }
+            }
+            return true;
+        }
 
         const getCoords = () => {
-            const coords = { x: null, y: null }
+            const coords = { x: null, y: null, name:`Trader-${taken.length}` }
             do {
                 coords.x = Math.random() * 190 - 45;
                 coords.y = Math.random() * 90 + 5;
-            } while (!validateCoords(coords));
+            } while ( !validateCoordsAgainstPodiums(coords) ||  !validateCoordsAgainstTraders(coords));
+            taken.push(coords);
+            // console.log("coords: ", coords);
             return coords;
         }
+    
         let stageTraders = [];
         for (let i = 0; i < nTraders; i++) {
             const position = getCoords();
-            let x = i%2 ? 60 : 40;
-            let y = i%2 ? 50 : 50;
-            // let x = position.x;
-            // let y = position.y;
-            // let xSpeed = Math.random()*.5-.25;
-            // let ySpeed = Math.random()*.5-.25;
-            let xSpeed = i%2 ? -.1 : .1;
-            let ySpeed = 0;
+            // let y = i%2 ? 45 : 55;
+            // let x = i%2 ? 60 : 40;
+            let xSpeed = Math.random()*.5-.25;
+            let ySpeed = Math.sqrt(.1-xSpeed*xSpeed);
+            // let ySpeed = i%2 ? -.1 : -.2;
+            // let xSpeed = i%2 ? -.2 : .1;
+            // let xSpeed = i%2 ? -.1 : .1;
+            // let ySpeed = 0;
             stageTraders.push({
                 name: `Trader-${i}`,
                 isIn: false,
                 xSpeed,
                 ySpeed,
-                x,
-                y,
+                x: position.x,
+                y: position.y,
                 isAlive: true,
                 red:99,
                 green:56,
                 blue: 99,
                 size: 5,
                 isGo: false,
-                aim: xSpeed === 0 ? ySpeed >= 0 ? 0 : 180 : (ySpeed>=0 ? 180 - Math.atan(xSpeed/ySpeed)/Math.PI*180 : 180 - Math.atan(xSpeed/ySpeed)/Math.PI*180 + 180)
             });
         }
         cb(stageTraders);
