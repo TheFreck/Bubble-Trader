@@ -24,8 +24,8 @@ export const Trader = ({
     const [cash, setCash] = useState(10000);
     const [myX,setMyX] = useState(x);
     const [myY,setMyY] = useState(y);
-    const [myXspeed, setMyXspeed] = useState(xSpeed);
-    const [myYspeed, setMyYspeed] = useState(ySpeed);
+    const [myXspeed, setMyXspeed] = useState(xSpeed ? xSpeed : 0);
+    const [myYspeed, setMyYspeed] = useState(ySpeed ? ySpeed : 0);
     const [myAim, setMyAim] = useState(aim);
     const [mySize, setMySize] = useState(size);
     const [myName, setMyName] = useState(name);
@@ -36,9 +36,6 @@ export const Trader = ({
     const ref = useRef();
 
     useEffect(() => {
-        if(!myX || !myY || !myXspeed || !myYspeed){
-            console.log("didn't get position or speed");
-        }
         if (name === 'Trader-Joe' || !red || !green || !blue) return;
         setMyX(x+xSpeed);
         setMyY(y+ySpeed);

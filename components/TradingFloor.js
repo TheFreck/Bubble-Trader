@@ -12,6 +12,7 @@ export const TradingFloor = (props) => {
     const [connections, setConnections] = useState([]);
     const [diamonds, setDiamonds] = useState([]);
     const [points, setPoints] = useState([]);
+    const [slowing, setSlowing] = useState(.8);
     const slopes = [
         (x, y) => {
             if (x >= points[3].x && x <= points[0].x) {
@@ -86,6 +87,12 @@ export const TradingFloor = (props) => {
             context.setIntervalId(0);
         }
     }, [context.isRunning]);
+
+    const getBounceAngle = (normal,xSp,ySp) => {
+        let aim = getAim(xSp,ySp);
+        let aimAdjustment = 2*(aim - normal);
+        return (aim + aimAdjustment)%360;
+    }
     
     const march = () => {
         const trs = [];
@@ -93,38 +100,35 @@ export const TradingFloor = (props) => {
             for(let trader of context.traders){
                 let normal = pos.find(p => p.name === trader.name && p.type === 'normal');
                 if (pos.length && normal) {
-                    console.log(trader.name);
                     let normalAngle = normal?.angle;
-                    let aimAdjustment = 2*(trader.aim - normalAngle);
-                    trader.aim += aimAdjustment;
+                    trader.aim += getBounceAngle(normalAngle, trader.xSpeed, trader.ySpeed);
                     let aimRadians = (trader.aim/360)*Math.PI*2;
-                    const magnitude = Math.sqrt(trader.xSpeed * trader.xSpeed + trader.ySpeed * trader.ySpeed);
+                    let magnitude = (normal.myMagnitude+normal.theirMagnitude*2)/4;
                     const newXspeed = trader.aim === 180 || trader.aim === 0 || trader.aim === 360 ? 0 : -Math.sin(-aimRadians) * magnitude;
                     const newYspeed = trader.aim === 90 || trader.aim === 270 ? 0 : -Math.cos(aimRadians) * magnitude;
-                    let dist = Math.sqrt(Math.pow(normal.x1-normal.x2,2)+Math.pow(normal.y1-normal.y2,2));
-                    console.log("dist: ", dist);
+                    let dist = 11- Math.sqrt(Math.pow(normal.x1-normal.x2,2)+Math.pow(normal.y1-normal.y2,2));
                     // work on transfering magnitude from one to the other
                     // add a slowdown to the traders
                     trader.xSpeed = newXspeed;
                     trader.ySpeed = newYspeed;
-                    trader.x += 10*trader.xSpeed;
-                    trader.y += 10*trader.ySpeed;
+                    trader.x = normal.x1 + 5*newXspeed;
+                    trader.y = normal.y1 + 5*newYspeed;
                 }
-                trader.x += trader.xSpeed;
-                trader.y += trader.ySpeed;
+                trader.x += trader.xSpeed*slowing;
+                trader.y += trader.ySpeed*slowing;
                 trs.push(trader);
+            }
+            for (let trader of trs) {
+                console.log(`moving ${trader.name} xSp: ${trader.xSpeed}, ySp: ${trader.ySpeed}`);
+                move(trader);
             }
             setTraders(trs);
         });
-
-        for (let trader of trs) {
-            move(trader);
-        }
         context.setTraders(traders);
     };
 
     const move = (trader) => {
-        if (!trader.isAlive) return;
+        if (!trader.isAlive || (!trader.xSpeed && !trader.ySpeed)) return;
         trader.aim = getAim(trader.xSpeed,trader.ySpeed);
         // Podiums
         for (let podium of context.podiums) {
@@ -167,15 +171,13 @@ export const TradingFloor = (props) => {
         }
         // Walls
         if (trader.x - trader.size / 2 <= -50 || trader.x + trader.size / 2 >= 150) {
-            trader.xSpeed *= -1;
-            trader.x += trader.xSpeed;
+            trader.xSpeed *= -1*slowing;
+            trader.x += 2*trader.xSpeed;
         }
         if (trader.y - trader.size <= 1 || trader.y + trader.size >= 99) {
-            trader.ySpeed *= -1;
-            trader.y += trader.ySpeed;
+            trader.ySpeed *= -1*slowing;
+            trader.y += 2*trader.ySpeed;
         }
-
-        
     };
 
     const findConnections = (cb) => {
@@ -190,6 +192,18 @@ export const TradingFloor = (props) => {
                 let xDist = Math.pow(traders[i].x - traders[j].x, 2);
                 let yDist = Math.pow(traders[i].y - traders[j].y, 2);
                 let dist = Math.sqrt(xDist + yDist);
+                let tri = traders[i];
+                let trj = traders[j];
+                let xsa = tri.xSpeed;
+                let ysa = tri.ySpeed;
+                let xsb = trj.xSpeed;
+                let ysb = trj.ySpeed;
+                let xspa = Math.pow(xsa,2);
+                let yspa = Math.pow(ysa,2);
+                let xspb = Math.pow(xsb,2);
+                let yspb = Math.pow(ysb,2);
+                let myMagnitude = Math.sqrt(xspa+yspa);
+                let theirMagnitude = Math.sqrt(xspb+yspb);
                 if (dist < 11) {
                     let normalAngle = getAim(traders[j].x-traders[i].x,traders[j].y-traders[i].y);
                     connects.push({
@@ -202,7 +216,9 @@ export const TradingFloor = (props) => {
                         red: 255,
                         green: 0,
                         blue: 0,
-                        angle: normalAngle
+                        angle: normalAngle,
+                        myMagnitude,
+                        theirMagnitude
                     });
                 }
             }
@@ -213,6 +229,9 @@ export const TradingFloor = (props) => {
 
     const getAim = (xSpeed,ySpeed) => {
         let aim = 0;
+        if(xSpeed === 0 && ySpeed === 0){
+            return 0;
+        }
         if(xSpeed === 0){
             if(ySpeed > 0) {
                 aim = 180;
@@ -257,7 +276,6 @@ export const TradingFloor = (props) => {
         , [context.connections]);
 
     const TraderCallback = useCallback(() =>
-    <>
         <Suspense fallback={null} key={"suspense-"}>
             {context.floorId && context.traders && context.traders.length > 0 && context.traders.map((t, i) =>
                 <Trader
@@ -278,10 +296,10 @@ export const TradingFloor = (props) => {
                     isAlive={t.isAlive}
                     aim={getAim(t.xSpeed,t.ySpeed)}
                 >
+                    {t === null ? <div>nuttin here{console.log("nuttin here: ", t)}</div> : null}
                 </Trader>
             )}
         </Suspense>
-    </>
         ,
         [context.floorId, context.isRunning, context.traders, traders]);
 

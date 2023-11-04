@@ -36,7 +36,6 @@ export const helpers = {
                 coords.y = Math.random() * 90 + 5;
             } while ( !validateCoordsAgainstPodiums(coords) ||  !validateCoordsAgainstTraders(coords));
             taken.push(coords);
-            // console.log("coords: ", coords);
             return coords;
         }
     
@@ -45,12 +44,12 @@ export const helpers = {
             const position = getCoords();
             // let y = i%2 ? 45 : 55;
             // let x = i%2 ? 60 : 40;
-            let xSpeed = Math.random()*.5-.25;
-            let ySpeed = Math.sqrt(.1-xSpeed*xSpeed);
-            // let ySpeed = i%2 ? -.1 : -.2;
-            // let xSpeed = i%2 ? -.2 : .1;
-            // let xSpeed = i%2 ? -.1 : .1;
-            // let ySpeed = 0;
+            // let ySpeed = i%2 ? 0.000000001 : -.1;
+            // let xSpeed = i%2 ? 0 : .2;
+            let xSpeed = (Math.random()*2-1)/5;
+            let ySpeed = (Math.random()*2-1)/5;
+            // console.log("stageTrader xSpeed: ", xSpeed);
+            // console.log("stageTrader ySpeed: ", ySpeed);
             stageTraders.push({
                 name: `Trader-${i}`,
                 isIn: false,

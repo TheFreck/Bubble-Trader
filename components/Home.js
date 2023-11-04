@@ -7,7 +7,7 @@ export const Home = () => {
   const floorWidth = 90;
   const floorHeight = 90;
   const [isRunning, setIsRunning] = useState(false);
-  const [nTraders, setNtraders] = useState(10);
+  const [nTraders, setNtraders] = useState(5);
   const [traders, setTraders] = useState([]);
   const [time,setTime]=useState(0);
   const [connections, setConnections]=useState([]);
