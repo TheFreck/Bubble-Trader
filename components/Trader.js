@@ -63,13 +63,13 @@ export const Trader = ({
     
     useEffect(() => {
         if(Math.abs(myYspeed) > 0){
-            // console.log(myName + " ySpeed: ", myYspeed);
+            console.log(myName + " ySpeed: ", myYspeed);
         }
     }, [myYspeed]);
 
     useEffect(() => {
         if(Math.abs(myXspeed) > 0){
-            // console.log(myName + " xSpeed: ", myXspeed);
+            console.log(myName + " xSpeed: ", myXspeed);
         }
     }, [myXspeed]);
 
@@ -94,17 +94,28 @@ export const Trader = ({
 
     const Direction = () => (
         <>
-        {/* console.log(`rendering direction at: xSpeed: ${myXspeed}, ySpeed: ${myYspeed} - `, ref.current) */}
-            <polygon 
+            {console.log('show polygon: ', 
+            myXspeed > 0 
+            || myYspeed > 0 
+            || myXspeed < 0
+            || myYspeed < 0)}
+            
+            {(myXspeed > 0 
+            || myYspeed > 0 
+            || myXspeed < 0
+            || myYspeed < 0)
+            &&
+             <polygon 
                 points={
                     `${(myX?myX:0)+mySize*Math.cos(Math.PI)},${(myY?myY:0)} 
                     ${(myX?myX:0)},${(myY?myY:0)-mySize} 
                     ${(myX?myX:0)-mySize*Math.cos(Math.PI)},${(myY?myY:0)}`
                 } 
-                // stroke='salmon'
                 fill={'plum'} 
                 transform={`rotate(${myAim?myAim:0},${myX?myX:0},${myY?myY:0})`}
             />
+            }
+
             <line
                 x1={`${myX}%`}
                 x2={`${myX+myXspeed*10}%`}

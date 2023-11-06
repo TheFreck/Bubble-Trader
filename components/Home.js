@@ -2,6 +2,8 @@ import React, { useState, Suspense, useCallback, useEffect, useRef } from 'react
 import TradingFloor from './TradingFloor';
 import TradingContext from './TradingContext';
 import HomeHelpers from './HomeHelpers';
+import { Button, Modal } from '@mui/material';
+import TraderForm from './TraderForm';
 
 export const Home = () => {
   const floorWidth = 90;
@@ -22,6 +24,10 @@ export const Home = () => {
   const [floorCounter, setFloorCounter] = useState(0);
   const [traderCounter, setTraderCounter] = useState(0);
   const [intervalId,setIntervalId] = useState(0);
+  const [manualTradersOn, setManualTradersOn] = useState(true);
+  const [traderFormOpen, setTraderFormOpen] = useState(false);
+  const handleFormOpen = () => setTraderFormOpen(true);
+  const handleFormClose = () => setTraderFormOpen(false);
   const tradersRef = useRef();
 
   useEffect(() => {
@@ -29,26 +35,37 @@ export const Home = () => {
     HomeHelpers.getAssets(nAssets,(pods) => {
       setPodiums(pods);
       setAssetsComplete(true);
-      HomeHelpers.getTraders(pods,nTraders,(trdrs) => {
+      HomeHelpers.getTraders(pods,manualTradersOn ? 0 : nTraders,(trdrs) => {
         for(let i=0; i<trdrs.length; i++){
           for(let j=0; j<trdrs.length; j++){
             if(i===j) continue;
             let dist = Math.sqrt(Math.pow(trdrs[i].y-trdrs[j].y,2)+Math.pow(trdrs[i].x-trdrs[j].x,2));
-            console.log(`distance between ${trdrs[i].name} and ${trdrs[j].name}: ${Math.floor(dist*10)/10}`)
           }
         }
-        console.log("setup traders: ", trdrs);
         setTraders(trdrs);
         tradersRef.current = trdrs;
         setTradersComplete(true);
       });
     });
   }, []);
-  useEffect(() => {
-    if(traders.find(t => t.x===NaN || t.y===NaN || t.xSpeed===NaN || t.ySpeed===NaN)){
-      console.log("traders broke: ", traders);
-    }
-  },[traders]);
+  
+  const createTrader = ({x,y,xSpeed,ySpeed}) => {
+    setTraders([...traders,{
+      name: 'Trader-' + traders.length,
+      xSpeed,
+      ySpeed,
+      x,
+      y,
+      floorId,
+      isAlive: true,
+      isIn: false,
+      red:99,
+      green: 56,
+      blue: 99,
+      size: 5,
+      isGo: false
+    }])
+  }
 
   useEffect(() => {
     if(isRunning) console.log("++++++++++++++++++++\n+ turning it on +\n++++++++++++++++++++");
@@ -62,7 +79,7 @@ export const Home = () => {
       floorId={floorId}
     />
   ,
-    [floorId]
+    [floorId,traders]
   );
 
   return (
@@ -76,9 +93,11 @@ export const Home = () => {
           height: `${floorHeight}vh`
         }}
       >
-      <button onClick={() => setIsRunning(!isRunning)} >{isRunning ? 'STOP' : 'START'}</button>
+          <Button onClick={() => setTraderFormOpen(!traderFormOpen)}>Create Trader</Button>
+          <Button onClick={() => setIsRunning(!isRunning)} >{isRunning ? 'STOP' : 'START'}</Button>
         <TradingContext.Provider 
           value={{
+            createTrader,
             traders,setTraders,
             isRunning,setIsRunning,
             time,setTime,
@@ -91,7 +110,16 @@ export const Home = () => {
             traderCounter,setTraderCounter,
             intervalId,setIntervalId
           }}
+        >
+          <Modal
+            open={traderFormOpen}
+            onClose={handleFormClose}
+            style={{ background: 'white'}}
           >
+           <div><TraderForm
+            handleFormClose={handleFormClose}
+           /></div>
+          </Modal>
           {tradersComplete && assetsComplete &&
           <Suspense fallback={null}>
             <TradingFloorCallback />

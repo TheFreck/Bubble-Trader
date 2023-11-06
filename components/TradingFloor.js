@@ -249,7 +249,6 @@ export const TradingFloor = (props) => {
             }
         }
         if(ySpeed < 0){
-            
             aim = (Math.atan(-xSpeed/ySpeed)/Math.PI*180)%360;
         }
         else{
@@ -332,7 +331,7 @@ export const TradingFloor = (props) => {
             slopes={slopes}
         />
     }
-        , [diamonds]);
+    , [diamonds]);
 
     return (
         <div
@@ -343,7 +342,7 @@ export const TradingFloor = (props) => {
                 width={`${floorWidth}vw`}
                 height={`${floorHeight}vh`}
                 xmlns="http://www.w3.org/2000/svg"
-                style={{ background: 'black' }}
+                style={{ background: 'gray' }}
             >
                 {/* <PodiumCallback /> */}
                 <TraderCallback />
