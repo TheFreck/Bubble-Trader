@@ -25,8 +25,8 @@ export const TraderForm = ({handleFormClose}) => {
                 let trader = {
                     x: parseFloat(x),
                     y: parseFloat(y),
-                    xSpeed: Math.sin((aim/360)*(2*Math.PI)),
-                    ySpeed: Math.cos((aim/360)*(2*Math.PI))
+                    xSpeed: Math.sin((aim/360)*(2*Math.PI))*magnitude,
+                    ySpeed: Math.cos((aim/360)*(2*Math.PI))*magnitude
                 };
                 context.createTrader(trader);
             }
@@ -37,17 +37,64 @@ export const TraderForm = ({handleFormClose}) => {
     }
 
     const handleFormType = (event,type) => {
+        console.log("handling form type: ", type);
         setInputType(type);
     }
 
+    const handleFormUpdate = (event) => {
+        switch(event.target.name){
+            case 'Xpos':
+                setX(event.target.value);
+                break;
+            case 'Ypos':
+                setY(event.target.value);
+                break;
+            case 'Xspd':
+                setXspeed(event.target.value);
+                break;
+            case 'Yspd':
+                setYspeed(event.target.value);
+                break;
+            case 'Aim':
+                setAim(event.target.value);
+                break;
+            case 'Mag':
+                setMagnitude(event.target.value);
+                break;
+            default:
+                break;
+        }
+    }
+
     const makeAim = (event,aim) => {
-        console.log("making aim: ", aim);
-        setAim(aim);
+        // if(aim === null || aim === undefined) return;
+        console.log("making aim: ", event.target);
+        setAim(event.target.value);
     }
 
     const makeMagnitude = (event,mag) => {
-        console.log("making magnitude: ", mag);
-        setMagnitude(mag);
+        console.log("making magnitude: ", event.target);
+        setMagnitude(event.target.value);
+    }
+
+    const makeX = (event,x) => {
+        console.log("making x: ", event.target);
+        setX(event.target.valuex);
+    }
+
+    const makeY = (event,y) => {
+        console.log("making x: ", event.target);
+        setX(event.target.value);
+    }
+
+    const makeXspeed = (event,xSpeed) => {
+        console.log("making xSpeed: ", event.target);
+        setXspeed(event.target.value);
+    }
+    
+    const makeYspeed = (event,ySpeed) => {
+        console.log("making Yspeed: ", event.target);
+        setYspeed(event.target.value);
     }
 
     return (
@@ -89,21 +136,23 @@ export const TraderForm = ({handleFormClose}) => {
                 </ToggleButtonGroup>
                     
                 <TextField
+                    name="Xpos"
                     id="outlined-text"
                     label="X Position"
                     type="text"
                     value={x}
-                    onChange={event => setX(event.target.value)}
+                    onChange={handleFormUpdate}
                     InputLabelProps={{
                         shrink: true,
                     }}
                 />
                 <TextField
+                    name="Ypos"
                     id="outlined-text"
                     label="Y Position"
                     type="text"
                     value={y}
-                    onChange={event => setY(event.target.value)}
+                    onChange={handleFormUpdate}
                     InputLabelProps={{
                         shrink: true,
                     }}
@@ -111,10 +160,11 @@ export const TraderForm = ({handleFormClose}) => {
                 {inputType === 'xy' &&
                     <TextField
                         id="outlined-text"
-                        label="X Speed"
+                        name="Xspd"
+                        label='X Position'
                         type="text"
                         value={xSpeed}
-                        onChange={event => setXspeed(event.target.value)}
+                        onChange={handleFormUpdate}
                         InputLabelProps={{
                             shrink: true,
                         }}
@@ -124,40 +174,41 @@ export const TraderForm = ({handleFormClose}) => {
                 {inputType === 'xy' &&
                 <TextField
                     id="outlined-text"
-                    label="Y Speed"
+                    name="Yspd"
+                    label='Y Speed'
                     type="text"
                     value={ySpeed}
-                    onChange={event => setYspeed(event.target.value)}
+                    onChange={handleFormUpdate}
                     InputLabelProps={{
                         shrink: true,
                     }}
                 />
                 }
                 {inputType === 'aim' &&
-                    <>
-                        <Typography>AIM in degrees</Typography>
-                        <Slider
-                            label='AIM in degrees'
-                            size='small'
-                            defaultValue={0}
-                            step={1}
-                            min={0}
-                            max={360}
-                            onChange={makeAim}
-                        />
-                    </>
+                    <TextField
+                        id="outlined-text"
+                        name="Aim"
+                        label="Aim"
+                        type="text"
+                        value={aim}
+                        onChange={handleFormUpdate}
+                        InputLabelProps={{
+                            shrink: true,
+                        }}
+                    />
                 }
                 {inputType === 'aim' &&
                     <>
                         <Typography>Magnitude</Typography>
                         <Slider
+                            name='Mag'
                             label='magnitude'
                             size='small'
                             defaultValue={0}
                             step={.001}
                             min={0}
                             max={1}
-                            onChange={makeMagnitude}
+                            onChange={handleFormUpdate}
                         />
                     </>
                 }

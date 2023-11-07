@@ -9,7 +9,7 @@ export const Home = () => {
   const floorWidth = 90;
   const floorHeight = 90;
   const [isRunning, setIsRunning] = useState(false);
-  const [nTraders, setNtraders] = useState(5);
+  const [nTraders, setNtraders] = useState(7);
   const [traders, setTraders] = useState([]);
   const [time,setTime]=useState(0);
   const [connections, setConnections]=useState([]);
@@ -24,7 +24,7 @@ export const Home = () => {
   const [floorCounter, setFloorCounter] = useState(0);
   const [traderCounter, setTraderCounter] = useState(0);
   const [intervalId,setIntervalId] = useState(0);
-  const [manualTradersOn, setManualTradersOn] = useState(true);
+  const [manualTradersOn, setManualTradersOn] = useState(false);
   const [traderFormOpen, setTraderFormOpen] = useState(false);
   const handleFormOpen = () => setTraderFormOpen(true);
   const handleFormClose = () => setTraderFormOpen(false);
@@ -58,7 +58,6 @@ export const Home = () => {
       y,
       floorId,
       isAlive: true,
-      isIn: false,
       red:99,
       green: 56,
       blue: 99,

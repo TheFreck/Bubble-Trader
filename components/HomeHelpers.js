@@ -42,21 +42,62 @@ export const helpers = {
         let stageTraders = [];
         for (let i = 0; i < nTraders; i++) {
             const position = getCoords();
-            // let y = i%2 ? 45 : 55;
-            // let x = i%2 ? 60 : 40;
-            // let ySpeed = i%2 ? 0.000000001 : -.1;
-            // let xSpeed = i%2 ? 0 : .2;
-            let xSpeed = (Math.random()*2-1)/5;
-            let ySpeed = (Math.random()*2-1)/5;
-            // console.log("stageTrader xSpeed: ", xSpeed);
-            // console.log("stageTrader ySpeed: ", ySpeed);
+            let y = i%2 ? 35 : 50;
+            let x = i%2 ? 42.5 : 50;
+            let ySpeed = i%2 ? 2 : 0;
+            let xSpeed = i%2 ? 1 : 0;
+            xSpeed = Math.random()*.8-.4;
+            ySpeed = Math.random()*.8-.4;
+            switch(i){
+                case 0:
+                    x = 0;
+                    y = 50;
+                    xSpeed = 1;
+                    ySpeed = 0;
+                    break;
+                case 1:
+                    x = 40;
+                    y = 50;
+                    xSpeed = 0;
+                    ySpeed = 0;
+                    break;
+                case 2:
+                    x = 49;
+                    y = 55.5;
+                    xSpeed = 0;
+                    ySpeed = 0;
+                    break;
+                case 3:
+                    x = 49;
+                    y = 44.5;
+                    xSpeed = 0;
+                    ySpeed = 0;
+                    break;
+                case 4:
+                    x = 58;
+                    y = 50;
+                    xSpeed = 0;
+                    ySpeed = 0;
+                    break;
+                case 5:
+                    x = 58;
+                    y = 61;
+                    xSpeed = 0;
+                    ySpeed = 0;
+                    break;
+                case 6:
+                    x = 58;
+                    y = 39;
+                    xSpeed = 0;
+                    ySpeed = 0;
+                    break;
+            }
             stageTraders.push({
                 name: `Trader-${i}`,
-                isIn: false,
                 xSpeed,
                 ySpeed,
-                x: position.x,
-                y: position.y,
+                x: x,
+                y: y,
                 isAlive: true,
                 red:99,
                 green:56,
