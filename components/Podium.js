@@ -1,16 +1,16 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
 import TradingContext from "./TradingContext";
 
 export const Podium = ({name,shareQty,startingPrice,top,right,bottom,left}) => {
     const context = useContext(TradingContext);
     const [assetName,setAssetName] = useState(name);
-    const [bid,setBid] = useState(startingPrice);
-    const [ask, setAsk] = useState(startingPrice);
+    const [bid,setBid] = useState(startingPrice/.999);
+    const [ask, setAsk] = useState(startingPrice*.999);
     const [lastTrade, setLastTrade] = useState({});
     const [tradeHistory, setTradeHistory] = useState([]);
     const [sharesOutstanding, setSharesOutstanding] = useState(0);
     const [sharesAvailable, setSharesAvailable] = useState(shareQty);
-    const [cashOnHand, setCashOnHand] = useState(200000);
+    const [cashOnHand, setCashOnHand] = useState(200000000);
     const [topEdge, setTopEdge] = useState(top);
     const [rightEdge, setRightEdge] = useState(right);
     const [bottomEdge, setBottomEdge] = useState(bottom);
@@ -20,6 +20,11 @@ export const Podium = ({name,shareQty,startingPrice,top,right,bottom,left}) => {
     const assetRef = useRef();
 
     useEffect(() => {
+        let me = context.podiums.find(p => p.name === assetName);
+        me.buy = buy;
+        me.sell = sell;
+        me.bid = bid;
+        me.ask = ask;
         assetRef.current = {
             ...assetRef.current,
             assetName,
@@ -44,57 +49,92 @@ export const Podium = ({name,shareQty,startingPrice,top,right,bottom,left}) => {
 
     const buy = (buyer,shares) => {
         setTraders([...traders,buyer.name]);
+        let pod = context.podiums.find(p => p.name === assetName);
         if(buyer.cash >= shares*ask && sharesAvailable >= shares){
             assetRef.current.sharesOutstanding += shares;
             assetRef.current.sharesAvailable -= shares;
-            assetRef.current.cashOnHand += shares*ask;
+            assetRef.current.cashOnHand += shares*pod.ask;
 
-            tradeHistory.push({
+            tradeHistory.unshift({
                 buyer: buyer.name,
                 asset: assetName,
-                price: ask,
+                price: pod.ask,
                 shares,
                 time: Date.now()
             });
-            setBid(bid * 1.001);
-            setAsk(ask * 1.001);
-            return true;
+            let newBid = pod.bid / .99;
+            let newAsk = pod.ask / .99;
+            assetRef.current.bid = newBid;
+            assetRef.current.ask = newAsk;
+            setBid(newBid);
+            setAsk(newAsk);
+            pod.bid = newBid;
+            pod.ask = newAsk;
+            context.setPodiums([...context.podiums.filter(p => p.name !== assetName),pod]);
+            console.log(`buy ${assetName} - ${pod.ask}`);
+            return {
+                status: true,
+                cash: pod.ask*shares
+            };
         }
-        return false;
+        return {status:false};
     }
     
     const sell = (seller,shares) => {
         traders.splice(traders.indexOf(seller.name),1);
         setTraders(traders);
-        if(seller.portfolio[assetName] >= shares && cashOnHand >= shares*bid){
+        let pod = context.podiums.find(p => p.name === assetName);
+        if(seller.portfolio[assetName] >= shares && cashOnHand >= shares*pod.bid){
             assetRef.current.sharesOutstanding -= shares;
             assetRef.current.sharesAvailable += shares;
-            assetRef.current.cashOnHand -= shares*bid;
+            assetRef.current.cashOnHand -= shares*pod.bid;
             
-            tradeHistory.push({
+            tradeHistory.unshift({
                 seller: seller.name,
                 asset: assetName,
-                price: bid,
+                price: pod.bid,
                 shares,
                 time: Date.now()
             });
-            setBid(bid * .999);
-            setAsk(ask * .999);
-            return true;
+            let newBid = pod.bid * .99;
+            let newAsk = pod.ask * .99;
+            setBid(newBid);
+            setAsk(newAsk);
+            pod.bid = newBid;
+            pod.ask = newAsk;
+            context.setPodiums([...context.podiums.filter(p => p.name !== assetName),pod]);
+            console.log(`sell ${assetName} - ${pod.bid}`);
+            return {
+                status: true,
+                cash: pod.bid*shares
+            };
         }
-        return false;
+        return {status:false};
     }
 
+    const PodCallback = useCallback(() => <>
+        <rect
+            ref={assetRef}
+            bid={bid}
+            ask={ask}
+            x={leftEdge}
+            y={topEdge}
+            width={rightEdge-leftEdge}
+            height={bottomEdge-topEdge}
+            stroke={'red'}
+            fill={'orange'}
+        />
+            <text
+                x={(rightEdge+leftEdge)/2}
+                y={(topEdge+bottomEdge)/2}
+                stroke='black'
+                strokeWidth={.2}
+                fontSize={'.5em'}
+            >{assetName}</text>
+    </>,
+    [assetRef,bid,ask]);
 
-    return <rect
-        ref={assetRef}
-        x={leftEdge}
-        y={topEdge}
-        width={rightEdge-leftEdge}
-        height={bottomEdge-topEdge}
-        stroke={'red'}
-        fill={'orange'}
-    />
+    return <PodCallback />
 }
 
 export default Podium;

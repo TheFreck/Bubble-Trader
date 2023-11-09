@@ -9,12 +9,12 @@ export const Home = () => {
   const floorWidth = 90;
   const floorHeight = 90;
   const [isRunning, setIsRunning] = useState(false);
-  const [nTraders, setNtraders] = useState(7);
+  const [nTraders, setNtraders] = useState(20);
   const [traders, setTraders] = useState([]);
   const [time,setTime]=useState(0);
   const [connections, setConnections]=useState([]);
   const [bounces, setBounces]=useState([]);
-  const [nAssets, setNassets] = useState(0);
+  const [nAssets, setNassets] = useState(1);
   const [podiums, setPodiums] = useState([]);
   const [tradingFloor,setTradingFloor] = useState(0);
   const [tradersComplete, setTradersComplete] = useState(false);
@@ -36,6 +36,7 @@ export const Home = () => {
       setPodiums(pods);
       setAssetsComplete(true);
       HomeHelpers.getTraders(pods,manualTradersOn ? 0 : nTraders,(trdrs) => {
+        console.log("got traders: ", traders);
         for(let i=0; i<trdrs.length; i++){
           for(let j=0; j<trdrs.length; j++){
             if(i===j) continue;
@@ -47,7 +48,7 @@ export const Home = () => {
         setTradersComplete(true);
       });
     });
-  }, []);
+  }, [manualTradersOn]);
   
   const createTrader = ({x,y,xSpeed,ySpeed}) => {
     setTraders([...traders,{
@@ -65,6 +66,7 @@ export const Home = () => {
       isGo: false
     }])
   }
+
 
   useEffect(() => {
     if(isRunning) console.log("++++++++++++++++++++\n+ turning it on +\n++++++++++++++++++++");
@@ -94,6 +96,7 @@ export const Home = () => {
       >
           <Button onClick={() => setTraderFormOpen(!traderFormOpen)}>Create Trader</Button>
           <Button onClick={() => setIsRunning(!isRunning)} >{isRunning ? 'STOP' : 'START'}</Button>
+          <Button onClick={() => setManualTradersOn(!manualTradersOn)} >{manualTradersOn ? 'MANUAL' : 'AUTO CREATE'}</Button>
         <TradingContext.Provider 
           value={{
             createTrader,

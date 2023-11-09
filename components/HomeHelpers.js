@@ -22,7 +22,7 @@ export const helpers = {
         const validateCoordsAgainstTraders = ({x,y}) => {
             for(let cd of taken){
                 let dist = Math.sqrt(Math.pow(x-cd.x,2)+Math.pow(y-cd.y,2));
-                if(dist < 11) {
+                if(dist < 12) {
                     return false;
                 }
             }
@@ -34,7 +34,7 @@ export const helpers = {
             do {
                 coords.x = Math.random() * 190 - 45;
                 coords.y = Math.random() * 90 + 5;
-            } while ( !validateCoordsAgainstPodiums(coords) ||  !validateCoordsAgainstTraders(coords));
+            } while ( !validateCoordsAgainstPodiums(coords) || !validateCoordsAgainstTraders(coords));
             taken.push(coords);
             return coords;
         }
@@ -44,66 +44,74 @@ export const helpers = {
             const position = getCoords();
             let y = i%2 ? 35 : 50;
             let x = i%2 ? 42.5 : 50;
-            let ySpeed = i%2 ? 2 : 0;
-            let xSpeed = i%2 ? 1 : 0;
+            let ySpeed = i===0 ? 4 : 0;
+            let xSpeed = i===0 ? 3 : 0;
             xSpeed = Math.random()*.8-.4;
             ySpeed = Math.random()*.8-.4;
-            switch(i){
-                case 0:
-                    x = 0;
-                    y = 50;
-                    xSpeed = 1;
-                    ySpeed = 0;
-                    break;
-                case 1:
-                    x = 40;
-                    y = 50;
-                    xSpeed = 0;
-                    ySpeed = 0;
-                    break;
-                case 2:
-                    x = 49;
-                    y = 55.5;
-                    xSpeed = 0;
-                    ySpeed = 0;
-                    break;
-                case 3:
-                    x = 49;
-                    y = 44.5;
-                    xSpeed = 0;
-                    ySpeed = 0;
-                    break;
-                case 4:
-                    x = 58;
-                    y = 50;
-                    xSpeed = 0;
-                    ySpeed = 0;
-                    break;
-                case 5:
-                    x = 58;
-                    y = 61;
-                    xSpeed = 0;
-                    ySpeed = 0;
-                    break;
-                case 6:
-                    x = 58;
-                    y = 39;
-                    xSpeed = 0;
-                    ySpeed = 0;
-                    break;
-            }
+            // switch(i){
+            //     case 0:
+            //         x = 25;
+            //         y = 50;
+            //         xSpeed = 1;
+            //         ySpeed = 0;
+            //         break;
+            //     case 1:
+            //         x = 40;
+            //         y = 50;
+            //         xSpeed = 0;
+            //         ySpeed = 0;
+            //         break;
+            //     case 2:
+            //         x = 50;
+            //         y = 55.5;
+            //         xSpeed = 0;
+            //         ySpeed = 0;
+            //         break;
+            //     case 3:
+            //         x = 50;
+            //         y = 44.5;
+            //         xSpeed = 0;
+            //         ySpeed = 0;
+            //         break;
+            //     case 4:
+            //         x = 60;
+            //         y = 50;
+            //         xSpeed = 0;
+            //         ySpeed = 0;
+            //         break;
+            //     case 5:
+            //         x = 60;
+            //         y = 61;
+            //         xSpeed = 0;
+            //         ySpeed = 0;
+            //         break;
+            //     case 6:
+            //         x = 60;
+            //         y = 39;
+            //         xSpeed = 0;
+            //         ySpeed = 0;
+            //         break;
+            // }
+            // const position = {
+            //     x: 0,
+            //     y: 50
+            // };
+            // const xSpeed = .5;
+            // const ySpeed = 0;
             stageTraders.push({
                 name: `Trader-${i}`,
                 xSpeed,
                 ySpeed,
-                x: x,
-                y: y,
+                x: position.x,
+                y: position.y,
                 isAlive: true,
                 red:99,
                 green:56,
                 blue: 99,
                 size: 5,
                 isGo: false,
+                cash: 10000,
+                portfolio: {}
             });
         }
         cb(stageTraders);

@@ -2,6 +2,7 @@ import react, { useEffect, useRef, useState, useContext, useCallback, Suspense }
 import TradingContext from './TradingContext';
 
 export const Trader = ({
+    index,
     name = 'Trader-Joe',
     xSpeed,
     ySpeed,
@@ -13,12 +14,15 @@ export const Trader = ({
     floorId,
     size=5,
     isAlive,
-    aim=0
+    aim=0,
+    cash,
+    portfolio
 }) => {
 
     const context = useContext(TradingContext);
-    const [portfolio, setPortfolio] = useState({});
-    const [cash, setCash] = useState(10000);
+    const [myPortfolio, setMyPortfolio] = useState({});
+    const [myCash, setMyCash] = useState(cash);
+    const [myIndex, setMyIndex] = useState(index);
     const [myX,setMyX] = useState(x);
     const [myY,setMyY] = useState(y);
     const [myXspeed, setMyXspeed] = useState(xSpeed ? xSpeed : 0);
@@ -34,7 +38,7 @@ export const Trader = ({
 
     useEffect(() => {
         if (name === 'Trader-Joe' || !red || !green || !blue) return;
-        console.log(myName);
+        // console.log(JSON.parse(JSON.stringify(myName)),`tx: ${JSON.parse(JSON.stringify(myX))}; ty: ${JSON.parse(JSON.stringify(myY))}`);
     },[]);
 
     const Circle = () => (
@@ -52,6 +56,8 @@ export const Trader = ({
             cy={`${myY}%`}
             r={`${mySize ? mySize : 5}%`}
             transform={`rotate(${myAim?myAim:0},${myX?myX:0},${myY?myY:0})`}
+            cash={myCash}
+            portfolio={myPortfolio}
         />
     );
 
@@ -83,10 +89,23 @@ export const Trader = ({
         </>
     );
 
+    const Label = () => {
+        return <text 
+            x={myX}
+            y={myY}
+            stroke='black'
+            strokeWidth={.1}
+            fontSize='.25em'
+        >
+            {myIndex}
+        </text>
+    } 
+
     return (
         <Suspense fallback={null}>
             <Circle />
             <Direction />
+            <Label />
         </Suspense>
     )
 }
