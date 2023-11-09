@@ -71,7 +71,7 @@ export const Podium = ({name,shareQty,startingPrice,top,right,bottom,left}) => {
             pod.bid = newBid;
             pod.ask = newAsk;
             context.setPodiums([...context.podiums.filter(p => p.name !== assetName),pod]);
-            console.log(`buy ${assetName} - ${pod.ask}`);
+            console.log(`buy ${assetName} - ${Math.floor(pod.ask*1000)/1000}`);
             return {
                 status: true,
                 cash: pod.ask*shares
@@ -103,7 +103,7 @@ export const Podium = ({name,shareQty,startingPrice,top,right,bottom,left}) => {
             pod.bid = newBid;
             pod.ask = newAsk;
             context.setPodiums([...context.podiums.filter(p => p.name !== assetName),pod]);
-            console.log(`sell ${assetName} - ${pod.bid}`);
+            console.log(`sell ${assetName} - ${Math.floor(pod.bid*1000)/1000}`);
             return {
                 status: true,
                 cash: pod.bid*shares
