@@ -4,17 +4,19 @@ import TradingContext from './TradingContext';
 import HomeHelpers from './HomeHelpers';
 import { Button, Modal } from '@mui/material';
 import TraderForm from './TraderForm';
+import PriceChart from './PriceChart';
+import ChartHousing from './ChartHousing';
 
 export const Home = () => {
-  const floorWidth = 90;
-  const floorHeight = 90;
-  const [isRunning, setIsRunning] = useState(false);
+  const floorWidth = 70;
+  const floorHeight = 70;
+  const [isRunning, setIsRunning] = useState(true);
   const [nTraders, setNtraders] = useState(20);
   const [traders, setTraders] = useState([]);
   const [time,setTime]=useState(0);
   const [connections, setConnections]=useState([]);
   const [bounces, setBounces]=useState([]);
-  const [nAssets, setNassets] = useState(1);
+  const [nAssets, setNassets] = useState(2);
   const [podiums, setPodiums] = useState([]);
   const [tradingFloor,setTradingFloor] = useState(0);
   const [tradersComplete, setTradersComplete] = useState(false);
@@ -26,6 +28,7 @@ export const Home = () => {
   const [intervalId,setIntervalId] = useState(0);
   const [manualTradersOn, setManualTradersOn] = useState(false);
   const [traderFormOpen, setTraderFormOpen] = useState(false);
+  const [displayChart, setDisplayChart] = useState(false);
   const handleFormOpen = () => setTraderFormOpen(true);
   const handleFormClose = () => setTraderFormOpen(false);
   const tradersRef = useRef();
@@ -83,6 +86,16 @@ export const Home = () => {
     [floorId,traders]
   );
 
+  const PriceChartCallback = useCallback(() => 
+    <ChartHousing 
+      style={{
+        marginLeft: 'auto',
+        marginRight: 'auto'
+      }}
+    />,
+    [isRunning]
+  ) 
+
   return (
     <>
       <div
@@ -110,7 +123,8 @@ export const Home = () => {
             rando,floorId,
             floorCounter,setFloorCounter,
             traderCounter,setTraderCounter,
-            intervalId,setIntervalId
+            intervalId,setIntervalId,
+            floorHeight,floorWidth
           }}
         >
           <Modal
@@ -123,10 +137,11 @@ export const Home = () => {
            /></div>
           </Modal>
           {tradersComplete && assetsComplete &&
-          <Suspense fallback={null}>
-            <TradingFloorCallback />
-          </Suspense>
-        }
+            <Suspense fallback={null}>
+              <TradingFloorCallback />
+            </Suspense>
+          }
+          <PriceChartCallback />
         </TradingContext.Provider>
       </div>
     </>

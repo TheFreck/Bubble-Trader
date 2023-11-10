@@ -85,10 +85,6 @@ export const TradingFloor = (props) => {
         context.setTraders(traders);
     };
 
-    const tradeDecision = () => {
-
-    }
-
     const move = (trader) => {
         if (!trader.isAlive || (!trader.xSpeed && !trader.ySpeed)) return;
         trader.aim = getAim(trader.xSpeed,trader.ySpeed);
@@ -348,8 +344,8 @@ export const TradingFloor = (props) => {
         >
             <svg
                 viewBox={`0 0 100 100`}
-                width={`${floorWidth}vw`}
-                height={`${floorHeight}vh`}
+                width={`${floorWidth/4}vw`}
+                height={`${floorHeight/4}vh`}
                 xmlns="http://www.w3.org/2000/svg"
                 style={{ background: 'gray' }}
             >

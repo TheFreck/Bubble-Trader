@@ -46,8 +46,8 @@ export const helpers = {
             let x = i%2 ? 42.5 : 50;
             let ySpeed = i===0 ? 4 : 0;
             let xSpeed = i===0 ? 3 : 0;
-            xSpeed = Math.random()*.8-.4;
-            ySpeed = Math.random()*.8-.4;
+            xSpeed = Math.random()*1-.5;
+            ySpeed = Math.random()*1-.5;
             // switch(i){
             //     case 0:
             //         x = 25;

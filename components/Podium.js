@@ -16,6 +16,7 @@ export const Podium = ({name,shareQty,startingPrice,top,right,bottom,left}) => {
     const [bottomEdge, setBottomEdge] = useState(bottom);
     const [leftEdge, setLeftEdge] = useState(left);
     const [traders, setTraders] = useState([]);
+    const [spread, setSpread] = useState(.999);
 
     const assetRef = useRef();
 
@@ -62,8 +63,9 @@ export const Podium = ({name,shareQty,startingPrice,top,right,bottom,left}) => {
                 shares,
                 time: Date.now()
             });
-            let newBid = pod.bid / .99;
-            let newAsk = pod.ask / .99;
+            pod.tradeHistory=tradeHistory;
+            let newBid = pod.bid / spread;
+            let newAsk = pod.ask / spread;
             assetRef.current.bid = newBid;
             assetRef.current.ask = newAsk;
             setBid(newBid);
@@ -71,7 +73,6 @@ export const Podium = ({name,shareQty,startingPrice,top,right,bottom,left}) => {
             pod.bid = newBid;
             pod.ask = newAsk;
             context.setPodiums([...context.podiums.filter(p => p.name !== assetName),pod]);
-            console.log(`buy ${assetName} - ${Math.floor(pod.ask*1000)/1000}`);
             return {
                 status: true,
                 cash: pod.ask*shares
@@ -96,20 +97,29 @@ export const Podium = ({name,shareQty,startingPrice,top,right,bottom,left}) => {
                 shares,
                 time: Date.now()
             });
-            let newBid = pod.bid * .99;
-            let newAsk = pod.ask * .99;
+            pod.tradeHistory=tradeHistory;
+            let newBid = pod.bid * spread;
+            let newAsk = pod.ask * spread;
             setBid(newBid);
             setAsk(newAsk);
             pod.bid = newBid;
             pod.ask = newAsk;
             context.setPodiums([...context.podiums.filter(p => p.name !== assetName),pod]);
-            console.log(`sell ${assetName} - ${Math.floor(pod.bid*1000)/1000}`);
             return {
                 status: true,
                 cash: pod.bid*shares
             };
         }
         return {status:false};
+    }
+
+    const logPrices = () => {
+        const prices = [];
+        for(let price of tradeHistory){
+            prices.unshift(price.price);
+        }
+        console.log(assetName);
+        console.log(prices);
     }
 
     const PodCallback = useCallback(() => <>
@@ -123,6 +133,8 @@ export const Podium = ({name,shareQty,startingPrice,top,right,bottom,left}) => {
             height={bottomEdge-topEdge}
             stroke={'red'}
             fill={'orange'}
+            onClick={logPrices}
+            tradehistory={tradeHistory}
         />
             <text
                 x={(rightEdge+leftEdge)/2}

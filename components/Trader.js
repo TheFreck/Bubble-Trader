@@ -33,6 +33,7 @@ export const Trader = ({
     const [myRed,setMyRed] = useState(red);
     const [myGreen, setMyGreen] = useState(green);
     const [myBlue, setMyBlue] = useState(blue);
+    const [myNetworth,setMyNetworth] = useState(0);
 
     const ref = useRef();
 
@@ -61,6 +62,18 @@ export const Trader = ({
         />
     );
 
+    const calculateNetworth = () => {
+        let assetValue = 0;
+        for(let [key,value] of Object.entries(context.traders.find(t => t.name === myName).portfolio)){
+            console.log(key, value);
+            let podium = context.podiums.find(p => p.name === key);
+            let lastPrice = (podium.bid + podium.ask)/2;
+            assetValue += lastPrice*value;
+        }
+        console.log(myCash+assetValue);
+        setMyNetworth(myCash+assetValue);
+    }
+
     const Direction = () => (
         <>
             {(myXspeed > 0 
@@ -69,6 +82,7 @@ export const Trader = ({
             || myYspeed < 0)
             &&
              <polygon 
+                onClick={calculateNetworth}
                 points={
                     `${(myX?myX:0)+mySize*Math.cos(Math.PI)},${(myY?myY:0)} 
                     ${(myX?myX:0)},${(myY?myY:0)-mySize} 
@@ -98,11 +112,14 @@ export const Trader = ({
             fontSize='.25em'
         >
             {myIndex}
+            {/* {myNetworth} */}
         </text>
     } 
 
     return (
-        <Suspense fallback={null}>
+        <Suspense 
+            fallback={null}
+        >
             <Circle />
             <Direction />
             <Label />
