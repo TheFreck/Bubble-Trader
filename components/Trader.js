@@ -12,7 +12,7 @@ export const Trader = ({
     green = Math.random() * 255,
     blue = Math.random() * 255,
     floorId,
-    size=5,
+    size=2,
     isAlive,
     aim=0,
     cash,
@@ -34,12 +34,17 @@ export const Trader = ({
     const [myGreen, setMyGreen] = useState(green);
     const [myBlue, setMyBlue] = useState(blue);
     const [myNetworth,setMyNetworth] = useState(0);
+    const [myRiskTolerance, setMyRiskTolerance] = useState(0);
+    const [myFearSensitivity, setMyFearSensitivity] = useState(0);
+
+    //**************************************************************************** */
+    // add a magnitude modifier to be adjustable at the level of the TradingFloor
+    //**************************************************************************** */
 
     const ref = useRef();
 
     useEffect(() => {
         if (name === 'Trader-Joe' || !red || !green || !blue) return;
-        // console.log(JSON.parse(JSON.stringify(myName)),`tx: ${JSON.parse(JSON.stringify(myX))}; ty: ${JSON.parse(JSON.stringify(myY))}`);
     },[]);
 
     const Circle = () => (
@@ -55,10 +60,11 @@ export const Trader = ({
             strokeWidth={.5}
             cx={`${myX}%`}
             cy={`${myY}%`}
-            r={`${mySize ? mySize : 5}%`}
+            r={`${mySize}%`}
             transform={`rotate(${myAim?myAim:0},${myX?myX:0},${myY?myY:0})`}
             cash={myCash}
             portfolio={myPortfolio}
+            risk-tolerance={myRiskTolerance}
         />
     );
 

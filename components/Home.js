@@ -2,16 +2,17 @@ import React, { useState, Suspense, useCallback, useEffect, useRef } from 'react
 import TradingFloor from './TradingFloor';
 import TradingContext from './TradingContext';
 import HomeHelpers from './HomeHelpers';
-import { Button, Modal } from '@mui/material';
+import { Accordion, AccordionDetails, AccordionSummary, Button, Modal, Typography } from '@mui/material';
 import TraderForm from './TraderForm';
 import PriceChart from './PriceChart';
 import ChartHousing from './ChartHousing';
+import { ExpandMore } from '@mui/icons-material';
 
 export const Home = () => {
-  const floorWidth = 70;
+  const floorWidth = 100;
   const floorHeight = 70;
   const [isRunning, setIsRunning] = useState(true);
-  const [nTraders, setNtraders] = useState(20);
+  const [nTraders, setNtraders] = useState(75);
   const [traders, setTraders] = useState([]);
   const [time,setTime]=useState(0);
   const [connections, setConnections]=useState([]);
@@ -25,10 +26,12 @@ export const Home = () => {
   const [floorId, setFloorId] = useState(Math.floor(Math.random()*100));
   const [floorCounter, setFloorCounter] = useState(0);
   const [traderCounter, setTraderCounter] = useState(0);
-  const [intervalId,setIntervalId] = useState(0);
   const [manualTradersOn, setManualTradersOn] = useState(false);
   const [traderFormOpen, setTraderFormOpen] = useState(false);
-  const [displayChart, setDisplayChart] = useState(false);
+  const [displayChart, setDisplayChart] = useState(true);
+  const [assetNames, setAssetNames] = useState([]);
+  const [tradersIntervalId,setTradersIntervalId] = useState(0);
+  const [chartIntervalId, setChartIntervalId] = useState(0);
   const handleFormOpen = () => setTraderFormOpen(true);
   const handleFormClose = () => setTraderFormOpen(false);
   const tradersRef = useRef();
@@ -37,6 +40,11 @@ export const Home = () => {
     console.log("H*H*H*H*H*H*H*H*H*H*H*H*H*H*H*H\nHOME\nH*H*H*H*H*H*H*H*H*H*H*H*H*H*H*H\nH: ", rando);
     HomeHelpers.getAssets(nAssets,(pods) => {
       setPodiums(pods);
+      const podNames = [];
+      for(let pod of pods){
+        podNames.push(pod.name);
+      }
+      setAssetNames(podNames);
       setAssetsComplete(true);
       HomeHelpers.getTraders(pods,manualTradersOn ? 0 : nTraders,(trdrs) => {
         console.log("got traders: ", traders);
@@ -52,6 +60,14 @@ export const Home = () => {
       });
     });
   }, [manualTradersOn]);
+
+  useEffect(() => {
+    console.log('context traders intervalId: ', tradersIntervalId);
+  },[tradersIntervalId]);
+
+  useEffect(() => {
+    console.log('context chart intervalId: ', chartIntervalId);
+  },[chartIntervalId]);
   
   const createTrader = ({x,y,xSpeed,ySpeed}) => {
     setTraders([...traders,{
@@ -65,7 +81,7 @@ export const Home = () => {
       red:99,
       green: 56,
       blue: 99,
-      size: 5,
+      size: 2,
       isGo: false
     }])
   }
@@ -87,25 +103,14 @@ export const Home = () => {
   );
 
   const PriceChartCallback = useCallback(() => 
-    <ChartHousing 
-      style={{
-        marginLeft: 'auto',
-        marginRight: 'auto'
-      }}
-    />,
-    [isRunning]
+      <ChartHousing />
+    ,
+    [floorId,displayChart]
   ) 
 
   return (
     <>
       <div
-        style={{
-          marginLeft: 'auto',
-          marginRight: 'auto',
-          padding: 0,
-          width: `${floorWidth}vw`,
-          height: `${floorHeight}vh`
-        }}
       >
           <Button onClick={() => setTraderFormOpen(!traderFormOpen)}>Create Trader</Button>
           <Button onClick={() => setIsRunning(!isRunning)} >{isRunning ? 'STOP' : 'START'}</Button>
@@ -123,8 +128,10 @@ export const Home = () => {
             rando,floorId,
             floorCounter,setFloorCounter,
             traderCounter,setTraderCounter,
-            intervalId,setIntervalId,
-            floorHeight,floorWidth
+            intervalId: tradersIntervalId,setIntervalId: setTradersIntervalId,
+            floorHeight,floorWidth,
+            assetNames,
+            chartIntervalId, setChartIntervalId
           }}
         >
           <Modal
@@ -136,12 +143,25 @@ export const Home = () => {
             handleFormClose={handleFormClose}
            /></div>
           </Modal>
-          {tradersComplete && assetsComplete &&
+          <Accordion>
+            <AccordionSummary
+              expandIcon={<ExpandMore />}
+              >
+                <Typography>Trading Floor</Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                {tradersComplete && assetsComplete &&
+                  <Suspense fallback={null}>
+                    <TradingFloorCallback />
+                  </Suspense>
+                }
+              </AccordionDetails>
+          </Accordion>
+          {displayChart &&
             <Suspense fallback={null}>
-              <TradingFloorCallback />
+              <PriceChartCallback />
             </Suspense>
           }
-          <PriceChartCallback />
         </TradingContext.Provider>
       </div>
     </>

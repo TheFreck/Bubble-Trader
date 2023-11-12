@@ -7,7 +7,7 @@ export const TradingFloor = (props) => {
     const { floorWidth, floorHeight, floorId } = props;
     const context = useContext(TradingContext);
     const [traders, setTraders] = useState(context.traders);
-    const [militicks, setMiliticks] = useState(1);
+    const [militicks, setMiliticks] = useState(.1);
     const [connections, setConnections] = useState([]);
     const [slowing, setSlowing] = useState(1);
     const floorRef = useRef();
@@ -21,16 +21,17 @@ export const TradingFloor = (props) => {
 
     useEffect(() => {
         if (context.isRunning) {
-            if (!context.intervalId) {
+            if (!context.tradersIntervalId) {
                 let intId = setInterval(march, militicks);
-                console.log("intId: ", intId);
+                floorRef.current.intId = intId;
+                console.log("traders interval id: ", intId);
                 context.setIntervalId(intId);
             }
         }
         else {
-            clearInterval(context.intervalId);
+            clearInterval(floorRef.current.intId);
             context.setIntervalId(0);
-            console.log("interval id: ", context.intervalId);
+            console.log("clearing traders interval id: ", context.tradersIntervalId);
         }
     }, [context.isRunning]);
 
@@ -98,7 +99,7 @@ export const TradingFloor = (props) => {
                 && trader.xSpeed > 0) {
                 trader.xSpeed *= -1;
                 let shares = 100;
-                if(Math.random() >= .4){
+                if(Math.random() >= .5){
                     let buy = podium.buy(trader,shares);
                     if(buy.status){
                         trader.portfolio[podium.name] = trader.portfolio[podium.name] ? trader.portfolio[podium.name] + shares : shares;
@@ -121,7 +122,7 @@ export const TradingFloor = (props) => {
                 && trader.xSpeed < 0) {
                 trader.xSpeed *= -1;
                 let shares = 100;
-                if(Math.random() >= .4){
+                if(Math.random() >= .5){
                     let buy = podium.buy(trader,shares);
                     if(buy.status){
                         trader.portfolio[podium.name] = trader.portfolio[podium.name] ? trader.portfolio[podium.name] + shares : shares;
@@ -167,7 +168,7 @@ export const TradingFloor = (props) => {
                 && trader.ySpeed < 0) {
                 trader.ySpeed *= -1;
                 let shares = 100;
-                if(Math.random() >= .4){
+                if(Math.random() >= .5){
                     let buy = podium.buy(trader,shares);
                     if(buy.status){
                         trader.portfolio[podium.name] = trader.portfolio[podium.name] ? trader.portfolio[podium.name] + shares : shares;
@@ -218,7 +219,7 @@ export const TradingFloor = (props) => {
                 let yspb = Math.pow(ysb,2);
                 let myMagnitude = Math.sqrt(xspa+yspa);
                 let theirMagnitude = Math.sqrt(xspb+yspb);
-                if (dist < 11) {
+                if (dist < 5) {
                     let normalAngle = getAim(traders[j].x-traders[i].x,traders[j].y-traders[i].y);
                     connects.push({
                         name: traders[i].name,
@@ -344,8 +345,8 @@ export const TradingFloor = (props) => {
         >
             <svg
                 viewBox={`0 0 100 100`}
-                width={`${floorWidth/4}vw`}
-                height={`${floorHeight/4}vh`}
+                width={`${floorWidth/6}vw`}
+                height={`${floorHeight/4.2}vh`}
                 xmlns="http://www.w3.org/2000/svg"
                 style={{ background: 'gray' }}
             >

@@ -1,91 +1,89 @@
 import React, { Suspense, useCallback, useContext, useEffect, useRef, useState } from "react";
 import TradingContext from "./TradingContext";
 import PriceChart from "./PriceChart";
-import { MenuItem, Select } from "@mui/material";
+import { FormControl, InputLabel, MenuItem, Select, TextField, Typography } from "@mui/material";
 
 export const ChartHousing = () => {
     const context = useContext(TradingContext);
-    const [asset, setAsset] = useState({name:""});
-    const [prices, setPrices] = useState([]);
-    const [max, setMax] = useState(0);
-    const [min, setMin] = useState(0);
+    const [asset, setAsset] = useState({ name: "" });
     const [periods, setPeriods] = useState(100);
-
+    const [assetNames, setAssetNames] = useState([]);
+    const [movingAverage, setMovingAverage] = useState(1);
 
     const handleAssetSelection = event => {
-        console.log("event: ", event.target.value);
-        setAsset(context.podiums.find(p => p.name===event.target.value));
-    }
-    
-    useEffect(() => {
-        buildPriceData();
-    },[asset,periods]);
-
-    const buildPriceData = () => {
-        const trades = [];
-        let highest = 0;
-        let lowest = Number.MAX_SAFE_INTEGER;
-        if(asset.tradeHistory && asset.tradeHistory.length){
-            const groups = Object.groupBy(asset.tradeHistory, ({time}) => Math.floor(time/1000));
-            console.log("groups: ", groups);
-            for(let group of Object.entries(groups)){
-                const open = group[1][group[1].length-1].price;
-                const close = group[1][0].price;
-                let high = 0;
-                let low = Number.MAX_SAFE_INTEGER;
-                const groupId = parseInt(group[0]);
-                for(let trade of group[1]){
-                    high = trade.price > high ? trade.price : high;
-                    low = trade.price < low ? trade.price : low;
-                }
-                trades.unshift({open,close,high,low,groupId});
-                highest = high > highest ? high : highest;
-                lowest = low < lowest ? low : lowest;
-            }
+        if(event.target.value.toLowerCase() === 'none') {
+            setAsset({name:''});
         }
-        const periodTrades = [];
-        for(let i=0; i<Math.min(periods,trades.length); i++){
-            periodTrades.unshift(trades[i]);
+        else{
+            setAsset(context.podiums.find(p => p.name === event.target.value));
         }
-        setPrices(periodTrades);
-        setMax(highest);
-        setMin(lowest);
     }
 
     const handlePeriodSelection = event => {
         setPeriods(event.target.value);
     }
-    
+
+    const handleMovingAve = event => {
+        setMovingAverage(event.target.value);
+    }
+
     const PriceChartCallback = useCallback(() => (
         <Suspense fallback={null}>
             {asset.name !== "" &&
-            <PriceChart prices={prices} max={max*1.05} min={min/1.05} periods={periods}/>
+                <PriceChart 
+                    asset={asset}
+                    periods={periods}
+                    isActive={context.isRunning}
+                    movingAverage={movingAverage}
+                />
             }
         </Suspense>),
-    [prices,asset.name, periods]);
+        [context.floorId, context.isRunning,asset,periods, movingAverage]);
 
-    return <>
-        <Select
-            value={asset.name}
-            label='Asset'
-            onChange={handleAssetSelection}
+    return <div
+            style={{marginTop: '1em'}}
         >
-            {context.podiums && context.podiums.map((a,i) => 
-                <MenuItem key={i} value={a.name}>{a.name}</MenuItem>
-            )}
-        </Select>
-        <Select
-            value={periods}
-            label='Periods'
-            onChange={handlePeriodSelection}
-        >
-            <MenuItem value={50}>50</MenuItem>   
-            <MenuItem value={100}>100</MenuItem>   
-            <MenuItem value={150}>150</MenuItem>   
-            <MenuItem value={200}>200</MenuItem>   
-        </Select>
-        <PriceChartCallback />            
-    </>
+        {assetNames &&
+        <FormControl
+            style={{minWidth: '5vw'}}
+            >
+            <InputLabel>Asset</InputLabel>
+            <Select
+                value={asset.name}
+                label='Asset'
+                labelId="label"
+                onChange={handleAssetSelection}
+            >
+                <MenuItem value="none">
+                <em>None</em>
+                </MenuItem>
+                {context.assetNames && context.assetNames.map((a, i) =>
+                    <MenuItem key={i} value={a}>{a}</MenuItem>
+                )}
+            </Select>
+        </FormControl>
+        }
+        <TextField label='Moving Average' onChange={handleMovingAve} value={movingAverage} />
+        <FormControl>
+            <InputLabel>Periods</InputLabel>
+            <Select
+                value={periods}
+                label='Periods'
+                onChange={handlePeriodSelection}
+            >
+                <MenuItem value={50}>50</MenuItem>
+                <MenuItem value={100}>100</MenuItem>
+                <MenuItem value={150}>150</MenuItem>
+                <MenuItem value={200}>200</MenuItem>
+                <MenuItem value={500}>500</MenuItem>
+                <MenuItem value={1000}>1000</MenuItem>
+                <MenuItem value={5000}>5000</MenuItem>
+                <MenuItem value={10000}>10000</MenuItem>
+            </Select>
+        </FormControl>
+            
+        <PriceChartCallback />
+    </div>
 }
 
 export default ChartHousing;

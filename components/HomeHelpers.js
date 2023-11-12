@@ -22,7 +22,7 @@ export const helpers = {
         const validateCoordsAgainstTraders = ({x,y}) => {
             for(let cd of taken){
                 let dist = Math.sqrt(Math.pow(x-cd.x,2)+Math.pow(y-cd.y,2));
-                if(dist < 12) {
+                if(dist < 5) {
                     return false;
                 }
             }
@@ -46,8 +46,8 @@ export const helpers = {
             let x = i%2 ? 42.5 : 50;
             let ySpeed = i===0 ? 4 : 0;
             let xSpeed = i===0 ? 3 : 0;
-            xSpeed = Math.random()*1-.5;
-            ySpeed = Math.random()*1-.5;
+            xSpeed = Math.random()*2-1;
+            ySpeed = Math.random()*2-1;
             // switch(i){
             //     case 0:
             //         x = 25;
@@ -108,10 +108,11 @@ export const helpers = {
                 red:99,
                 green:56,
                 blue: 99,
-                size: 5,
+                size: 2,
                 isGo: false,
                 cash: 10000,
-                portfolio: {}
+                portfolio: {},
+                riskTolerance: Math.random()
             });
         }
         cb(stageTraders);

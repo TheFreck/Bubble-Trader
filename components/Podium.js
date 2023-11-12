@@ -1,5 +1,6 @@
 import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
 import TradingContext from "./TradingContext";
+import PodiumHelpers from "./PodiumHelpers";
 
 export const Podium = ({name,shareQty,startingPrice,top,right,bottom,left}) => {
     const context = useContext(TradingContext);
