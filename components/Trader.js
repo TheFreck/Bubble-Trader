@@ -33,7 +33,7 @@ export const Trader = ({
     const [myRed,setMyRed] = useState(red);
     const [myGreen, setMyGreen] = useState(green);
     const [myBlue, setMyBlue] = useState(blue);
-    const [myNetworth,setMyNetworth] = useState(0);
+    const [myNetworth,setMyNetworth] = useState(cash);
     const [myRiskTolerance, setMyRiskTolerance] = useState(0);
     const [myFearSensitivity, setMyFearSensitivity] = useState(0);
 
@@ -41,7 +41,6 @@ export const Trader = ({
     // add a magnitude modifier to be adjustable at the level of the TradingFloor
     //**************************************************************************** */
 
-    const ref = useRef();
 
     useEffect(() => {
         if (name === 'Trader-Joe' || !red || !green || !blue) return;
@@ -63,21 +62,27 @@ export const Trader = ({
             r={`${mySize}%`}
             transform={`rotate(${myAim?myAim:0},${myX?myX:0},${myY?myY:0})`}
             cash={myCash}
-            portfolio={myPortfolio}
+            networth={myNetworth ? myNetworth : 0}
             risk-tolerance={myRiskTolerance}
         />
     );
 
+    // useEffect(() => {
+    //     calculateNetworth();
+    // },[cash]);
+
     const calculateNetworth = () => {
+        if(!myCash && !Object.entries(myPortfolio).length) {
+            setMyNetworth(0);
+            return 0;
+        }
         let assetValue = 0;
         for(let [key,value] of Object.entries(context.traders.find(t => t.name === myName).portfolio)){
-            console.log(key, value);
             let podium = context.podiums.find(p => p.name === key);
-            let lastPrice = (podium.bid + podium.ask)/2;
-            assetValue += lastPrice*value;
+            assetValue += podium?.lastPrice*value;
         }
-        console.log(myCash+assetValue);
         setMyNetworth(myCash+assetValue);
+        return myCash+assetValue;
     }
 
     const Direction = () => (
@@ -101,10 +106,11 @@ export const Trader = ({
 
             <line
                 x1={`${myX}%`}
-                x2={`${myX+myXspeed*10}%`}
+                x2={`${myX+myXspeed*2}%`}
                 y1={`${myY}%`}
-                y2={`${myY+myYspeed*10}%`}
+                y2={`${myY+myYspeed*2}%`}
                 stroke={'red'}
+                strokeWidth={.5}
             />
         </>
     );
@@ -117,8 +123,9 @@ export const Trader = ({
             strokeWidth={.1}
             fontSize='.25em'
         >
-            {myIndex}
-            {/* {myNetworth} */}
+            {/* (x: {Math.floor(myX*100)/100}, y: {Math.floor(myY*100)/100}) */}
+            {/* {myIndex} */}
+            {Math.floor(myNetworth*100)/100}
         </text>
     } 
 

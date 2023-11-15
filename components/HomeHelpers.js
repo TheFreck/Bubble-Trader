@@ -1,6 +1,6 @@
 
 export const helpers = {
-    getTraders: (assets, nTraders, cb) => {
+    getTraders: (assets, nTraders, tSize, cb) => {
         const availableXs = [200, -200];
         const availableYs = [200, -200];
         const taken = [];
@@ -46,58 +46,18 @@ export const helpers = {
             let x = i%2 ? 42.5 : 50;
             let ySpeed = i===0 ? 4 : 0;
             let xSpeed = i===0 ? 3 : 0;
+            // x = -50;
+            // y = 50;
+            // xSpeed = (Math.random()*1-.5)*tSize;
+            // ySpeed = (Math.random()*1-.5)*tSize;
+            // position.x = -20;
+            // position.y = 50;
+            // xSpeed = .5;
+            // ySpeed = -.02;
+            // xSpeed = Math.random()*1-.5;
+            // ySpeed = Math.random()*1*(1-Math.abs(xSpeed))-Math.abs(xSpeed);
             xSpeed = Math.random()*2-1;
             ySpeed = Math.random()*2-1;
-            // switch(i){
-            //     case 0:
-            //         x = 25;
-            //         y = 50;
-            //         xSpeed = 1;
-            //         ySpeed = 0;
-            //         break;
-            //     case 1:
-            //         x = 40;
-            //         y = 50;
-            //         xSpeed = 0;
-            //         ySpeed = 0;
-            //         break;
-            //     case 2:
-            //         x = 50;
-            //         y = 55.5;
-            //         xSpeed = 0;
-            //         ySpeed = 0;
-            //         break;
-            //     case 3:
-            //         x = 50;
-            //         y = 44.5;
-            //         xSpeed = 0;
-            //         ySpeed = 0;
-            //         break;
-            //     case 4:
-            //         x = 60;
-            //         y = 50;
-            //         xSpeed = 0;
-            //         ySpeed = 0;
-            //         break;
-            //     case 5:
-            //         x = 60;
-            //         y = 61;
-            //         xSpeed = 0;
-            //         ySpeed = 0;
-            //         break;
-            //     case 6:
-            //         x = 60;
-            //         y = 39;
-            //         xSpeed = 0;
-            //         ySpeed = 0;
-            //         break;
-            // }
-            // const position = {
-            //     x: 0,
-            //     y: 50
-            // };
-            // const xSpeed = .5;
-            // const ySpeed = 0;
             stageTraders.push({
                 name: `Trader-${i}`,
                 xSpeed,
@@ -108,7 +68,7 @@ export const helpers = {
                 red:99,
                 green:56,
                 blue: 99,
-                size: 2,
+                size: tSize,
                 isGo: false,
                 cash: 10000,
                 portfolio: {},
@@ -122,16 +82,42 @@ export const helpers = {
         let spacing = 200/nAssets;
         let width = spacing/2;
         for (let i = 0; i < nAssets; i++) {
+            let top = Math.random()*50;
+            let bottom = Math.random()*50+50;
+            let left = i * spacing-50 + Math.random()*width/2;
+            let right = i * spacing + width-50 + Math.random()*width/2;
+            // top=25;
+            // bottom=75;
+            let height = bottom - top;
+            let xMid = (right-left)/2 + left;
+            let yMid = (bottom-top)/2 + top;
+            let shareQty = 10000;
+            let startingPrice = 20;
+            let bid = startingPrice/.999;
+            let ask = startingPrice*.999;
+            let cashOnHand = 1000000;
             pods.push({
-                name: helpers.getName(3, 'ticker'),
-                shareQty: 10000,
-                startingPrice: 20,
-                top: Math.random()*50,
-                bottom: Math.random()*50+50,
-                right: i * spacing + width-50 + width/2,
-                left: i * spacing-50 + width/2
+                assetName: helpers.getName(3, 'ticker'),
+                shareQty,
+                sharesAvailable: shareQty,
+                sharesOutstanding: 0,
+                startingPrice,
+                cashOnHand,
+                bid,
+                ask,
+                top,
+                bottom,
+                right,
+                left,
+                xMid,
+                yMid,
+                width,
+                height,
+                i,
+                tradeHistory: []
             });
         }
+        console.log("creating pods: ", pods);
         cb(pods);
     },
     getName: (chars, type) => {

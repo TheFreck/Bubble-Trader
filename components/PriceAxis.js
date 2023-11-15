@@ -3,21 +3,21 @@ import TradingContext from "./TradingContext";
 
 export const PriceAxis = ({ max, min }) => {
     const [ticks, setTicks] = useState([]);
-    const [top, setTop] = useState(max);
-    const [bottom, setBottom] = useState(min);
 
     useEffect(() => {
         const tcks = [];
         const tickGap = (max - min) / 10;
         for (let i = 0; i < 11; i++) {
-            ticks.push(min + i * tickGap+tickGap);
+            tcks.push(min + i * tickGap+tickGap);
         }
+        console.log("ticks: ", tcks);
+        setTicks(tcks);
     }, []);
 
-    return (
+    const AxisCallback = useCallback(() => (
         <>
             <rect
-                x='-12%'
+                x='90%'
                 y='0%'
                 height='100%'
                 width='5%'
@@ -28,7 +28,7 @@ export const PriceAxis = ({ max, min }) => {
                     key={i}
                     fallback={null}>
                     <line
-                        x1='-12%'
+                        x1='102%'
                         x2='100%'
                         y1={`${100 - 10 * i}%`}
                         y2={`${100 - 10 * i}%`}
@@ -46,7 +46,9 @@ export const PriceAxis = ({ max, min }) => {
                 </Suspense>
             ))}
         </>
-    )
+    ),ticks)
+
+    return <AxisCallback />;
 }
 
 export default PriceAxis;

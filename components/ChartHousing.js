@@ -5,17 +5,22 @@ import { FormControl, InputLabel, MenuItem, Select, TextField, Typography } from
 
 export const ChartHousing = () => {
     const context = useContext(TradingContext);
-    const [asset, setAsset] = useState({ name: "" });
+    const [asset, setAsset] = useState({ assetName: "none" });
     const [periods, setPeriods] = useState(100);
     const [assetNames, setAssetNames] = useState([]);
     const [movingAverage, setMovingAverage] = useState(1);
 
     const handleAssetSelection = event => {
         if(event.target.value.toLowerCase() === 'none') {
-            setAsset({name:''});
+            setAsset({assetName:'none'});
         }
         else{
-            setAsset(context.podiums.find(p => p.name === event.target.value));
+            console.log("set asset: ", event.target.value);
+            console.log("context podiums: ", context.podiums);
+            for(let pod of context.podiums){
+                console.log("podname: ", pod.assetName);
+            }
+            setAsset(context.podiums.find(p => p.assetName === event.target.value));
         }
     }
 
@@ -29,7 +34,7 @@ export const ChartHousing = () => {
 
     const PriceChartCallback = useCallback(() => (
         <Suspense fallback={null}>
-            {asset.name !== "" &&
+            {asset?.assetName?.toLowerCase() !== "none" &&
                 <PriceChart 
                     asset={asset}
                     periods={periods}
@@ -38,21 +43,21 @@ export const ChartHousing = () => {
                 />
             }
         </Suspense>),
-        [context.floorId, context.isRunning,asset,periods, movingAverage]);
+        [context.floorId, context.isRunning,asset.assetName,periods, movingAverage]);
 
     return <div
             style={{marginTop: '1em'}}
         >
-        {assetNames &&
+        {asset && assetNames &&
         <FormControl
             style={{minWidth: '5vw'}}
             >
             <InputLabel>Asset</InputLabel>
             <Select
-                value={asset.name}
                 label='Asset'
                 labelId="label"
                 onChange={handleAssetSelection}
+                value={asset.assetName}
             >
                 <MenuItem value="none">
                 <em>None</em>

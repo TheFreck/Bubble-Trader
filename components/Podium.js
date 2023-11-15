@@ -2,124 +2,43 @@ import React, { useCallback, useContext, useEffect, useRef, useState } from "rea
 import TradingContext from "./TradingContext";
 import PodiumHelpers from "./PodiumHelpers";
 
-export const Podium = ({name,shareQty,startingPrice,top,right,bottom,left}) => {
+export const Podium = (props) => {
+    const {name,shareQty,sharesAvailable,startingPrice,sharesOutstanding,cashOnHand,tradeHistory,top,right,bottom,left,i,xMid,yMid,bid,ask} = props;
     const context = useContext(TradingContext);
-    const [assetName,setAssetName] = useState(name);
-    const [bid,setBid] = useState(startingPrice/.999);
-    const [ask, setAsk] = useState(startingPrice*.999);
-    const [lastTrade, setLastTrade] = useState({});
-    const [tradeHistory, setTradeHistory] = useState([]);
-    const [sharesOutstanding, setSharesOutstanding] = useState(0);
-    const [sharesAvailable, setSharesAvailable] = useState(shareQty);
-    const [cashOnHand, setCashOnHand] = useState(200000000);
-    const [topEdge, setTopEdge] = useState(top);
-    const [rightEdge, setRightEdge] = useState(right);
-    const [bottomEdge, setBottomEdge] = useState(bottom);
-    const [leftEdge, setLeftEdge] = useState(left);
-    const [traders, setTraders] = useState([]);
-    const [spread, setSpread] = useState(.999);
 
     const assetRef = useRef();
 
     useEffect(() => {
-        let me = context.podiums.find(p => p.name === assetName);
-        me.buy = buy;
-        me.sell = sell;
-        me.bid = bid;
-        me.ask = ask;
+        if(!name || !shareQty || !startingPrice || !top || !right || !bottom || !left ) {
+            return;
+        };
         assetRef.current = {
             ...assetRef.current,
-            assetName,
+            name,
             shareQty,
+            sharesAvailable,
             startingPrice,
+            sharesOutstanding,
+            cashOnHand,
+            top,
+            right,
+            bottom,
+            left,
+            xMid,
+            yMid,
             bid,
             ask,
-            lastTrade,
             tradeHistory,
-            sharesOutstanding,
-            sharesAvailable,
-            cashOnHand,
-            top:topEdge,
-            right:rightEdge,
-            bottom:bottomEdge,
-            left:leftEdge,
-            traders,
-            buy,
-            sell
         }
+        context.setPodiums(assetRef.current);
     },[]);
-
-    const buy = (buyer,shares) => {
-        setTraders([...traders,buyer.name]);
-        let pod = context.podiums.find(p => p.name === assetName);
-        if(buyer.cash >= shares*ask && sharesAvailable >= shares){
-            assetRef.current.sharesOutstanding += shares;
-            assetRef.current.sharesAvailable -= shares;
-            assetRef.current.cashOnHand += shares*pod.ask;
-
-            tradeHistory.unshift({
-                buyer: buyer.name,
-                asset: assetName,
-                price: pod.ask,
-                shares,
-                time: Date.now()
-            });
-            pod.tradeHistory=tradeHistory;
-            let newBid = pod.bid / spread;
-            let newAsk = pod.ask / spread;
-            assetRef.current.bid = newBid;
-            assetRef.current.ask = newAsk;
-            setBid(newBid);
-            setAsk(newAsk);
-            pod.bid = newBid;
-            pod.ask = newAsk;
-            context.setPodiums([...context.podiums.filter(p => p.name !== assetName),pod]);
-            return {
-                status: true,
-                cash: pod.ask*shares
-            };
-        }
-        return {status:false};
-    }
     
-    const sell = (seller,shares) => {
-        traders.splice(traders.indexOf(seller.name),1);
-        setTraders(traders);
-        let pod = context.podiums.find(p => p.name === assetName);
-        if(seller.portfolio[assetName] >= shares && cashOnHand >= shares*pod.bid){
-            assetRef.current.sharesOutstanding -= shares;
-            assetRef.current.sharesAvailable += shares;
-            assetRef.current.cashOnHand -= shares*pod.bid;
-            
-            tradeHistory.unshift({
-                seller: seller.name,
-                asset: assetName,
-                price: pod.bid,
-                shares,
-                time: Date.now()
-            });
-            pod.tradeHistory=tradeHistory;
-            let newBid = pod.bid * spread;
-            let newAsk = pod.ask * spread;
-            setBid(newBid);
-            setAsk(newAsk);
-            pod.bid = newBid;
-            pod.ask = newAsk;
-            context.setPodiums([...context.podiums.filter(p => p.name !== assetName),pod]);
-            return {
-                status: true,
-                cash: pod.bid*shares
-            };
-        }
-        return {status:false};
-    }
-
     const logPrices = () => {
         const prices = [];
         for(let price of tradeHistory){
             prices.unshift(price.price);
         }
-        console.log(assetName);
+        console.log(name);
         console.log(prices);
     }
 
@@ -128,22 +47,86 @@ export const Podium = ({name,shareQty,startingPrice,top,right,bottom,left}) => {
             ref={assetRef}
             bid={bid}
             ask={ask}
-            x={leftEdge}
-            y={topEdge}
-            width={rightEdge-leftEdge}
-            height={bottomEdge-topEdge}
+            x={left}
+            y={top}
+            x-mid={(right-left)/2 + left}
+            y-mid={(bottom-top)/2 + top}
+            width={right-left}
+            height={bottom-top}
             stroke={'red'}
             fill={'orange'}
             onClick={logPrices}
-            tradehistory={tradeHistory}
         />
-            <text
-                x={(rightEdge+leftEdge)/2}
-                y={(topEdge+bottomEdge)/2}
-                stroke='black'
-                strokeWidth={.2}
-                fontSize={'.5em'}
-            >{assetName}</text>
+        <line
+            x1={left}
+            x2={right}
+            y1={top}
+            y2={bottom}
+            stroke='brown'
+            strokeWidth={1}
+        />
+        <line
+            x1={right}
+            x2={left}
+            y1={top}
+            y2={bottom}
+            stroke='brown'
+            strokeWidth={1}
+        />
+        <text
+            x={(right+left)/2-15}
+            y={(top+bottom)/2+1}
+            stroke='black'
+            strokeWidth={.2}
+            fontSize={'.3em'}
+        >
+            {name}
+        </text>
+        <text
+            x={(right+left)/2+5}
+            y={(top+bottom)/2-2}
+            stroke='black'
+            strokeWidth={.1}
+            fontSize={'.15em'}
+        >
+            bid: {Math.floor(bid*100)/100}
+        </text>
+        <text
+            x={(right+left)/2+5}
+            y={(top+bottom)/2+2}
+            stroke='black'
+            strokeWidth={.1}
+            fontSize={'.15em'}
+        >
+            ask: {Math.floor(ask*100)/100}
+        </text>
+        {/* <text
+            x={left}
+            y={top}
+            stroke='black'
+            strokeWidth={.1}
+            fontSize={'.15em'}
+        >
+            (x: {left}, y: {top})
+        </text>
+        <text
+            x={left}
+            y={bottom}
+            stroke='black'
+            strokeWidth={.1}
+            fontSize={'.15em'}
+        >
+            (x: {left}, y: {bottom})
+        </text>
+        <text
+            x={xMid}
+            y={yMid}
+            stroke='black'
+            strokeWidth={.1}
+            fontSize={'.15em'}
+        >
+            (x: {xMid}, y: {yMid})
+        </text> */}
     </>,
     [assetRef,bid,ask]);
 

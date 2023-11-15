@@ -16,7 +16,6 @@ export const PriceChart = ({asset,periods,isActive, movingAverage}) => {
     const pixelWidth = 100/prices.length;
 
     useEffect(() => {
-        console.log(asset,periods);
         march();
         if (context.isRunning) {
             if (context.chartIntervalId) {
@@ -43,6 +42,7 @@ export const PriceChart = ({asset,periods,isActive, movingAverage}) => {
     }, [context.isRunning,asset,periods,isActive]);
 
     const march = () => {
+        // console.log("march: ", asset.assetName)
         buildPriceData((data) => {
             const {periodTrades,highest,lowest,highVolume} = data;
             setPrices(periodTrades);
@@ -52,14 +52,18 @@ export const PriceChart = ({asset,periods,isActive, movingAverage}) => {
         });
     }
 
+    // useEffect(() => {
+    //     console.log("prices: ", prices);
+    // },[prices]);
+
     useEffect(() => {
-        buildPriceData();
-    }, [asset, periods]);
+        march();
+    }, [asset, periods,prices]);
 
     const buildPriceData = cb => {
         if(!cb) return;
         const trades = [];
-        if (asset.tradeHistory && asset.tradeHistory.length) {
+        if (asset?.tradeHistory && asset?.tradeHistory?.length) {
             const groups = Object.groupBy(asset.tradeHistory, ({ time }) => Math.floor(time / 1000));
             let closes = [];
             for (let group of Object.entries(groups)) {
@@ -99,20 +103,17 @@ export const PriceChart = ({asset,periods,isActive, movingAverage}) => {
         cb({periodTrades,highest,lowest,highVolume});
     }
 
-    const ChartCallback = useCallback(() => (
-        <svg
-            viewBox={`0 0 200 100`}
-            width={`${context.floorWidth-10}vw`}
-            height={`${context.floorHeight+10}vh`}
-            xmlns="http://www.w3.org/2000/svg"
-            style={{ background: 'gray', marginLeft: '5vw', marginRight: '5vw',width: `${context.floorWidth*.9}vw` }}
-        >
-            {prices &&
+    const AxisCallback = useCallback(() => 
             <PriceAxis
                 max={max}
                 min={min}
-            />}
-            {prices && prices.length && prices.map((p,i) => (
+            />,[prices,asset,context.isRunning]
+    )
+
+    const ChartCallback = useCallback(() => {
+        // console.log("chartCallback prices: ", prices);
+        return (
+            prices && prices.length && prices.map((p,i) => (
                 <ChartPixel 
                     key={i}
                     index={i}
@@ -133,16 +134,22 @@ export const PriceChart = ({asset,periods,isActive, movingAverage}) => {
                     displayAverage={true}
                     isFinal={i===prices.length-1}
                 />
-            ))}
-        </svg>),
+            )))},
         [prices,asset,periods,context.isRunning]);
 
     return (
-        <div
+        <svg
+            viewBox={`0 0 200 100`}
+            width={`${context.floorWidth-10}vw`}
+            height={`${context.floorHeight-20}vh`}
+            xmlns="http://www.w3.org/2000/svg"
+            style={{ background: 'gray', marginLeft: '5vw', marginRight: '5vw',width: `${context.floorWidth*.9}vw` }}
             ref={chartRef}
         >
+            {/* {console.log("price chart: ", prices)} */}
+            <AxisCallback />
             <ChartCallback />
-        </div>
+        </svg>
     )
 }
 
