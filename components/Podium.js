@@ -2,8 +2,26 @@ import React, { useCallback, useContext, useEffect, useRef, useState } from "rea
 import TradingContext from "./TradingContext";
 import PodiumHelpers from "./PodiumHelpers";
 
-export const Podium = (props) => {
-    const {name,shareQty,sharesAvailable,startingPrice,sharesOutstanding,cashOnHand,tradeHistory,top,right,bottom,left,i,xMid,yMid,bid,ask} = props;
+export const Podium = ({
+    name,
+    shareQty,
+    sharesAvailable,
+    startingPrice,
+    sharesOutstanding,
+    cashOnHand,
+    tradeHistory,
+    top,
+    right,
+    bottom,
+    left,
+    xMid,
+    yMid,
+    bid,
+    ask,
+    movingAverages,
+    waves,
+    value
+}) => {
     const context = useContext(TradingContext);
 
     const assetRef = useRef();
@@ -18,7 +36,6 @@ export const Podium = (props) => {
             shareQty,
             sharesAvailable,
             startingPrice,
-            sharesOutstanding,
             cashOnHand,
             top,
             right,
@@ -29,7 +46,11 @@ export const Podium = (props) => {
             bid,
             ask,
             tradeHistory,
+            movingAverages,
+            waves,
+            value
         }
+        assetRef.current.sharesOutstanding = sharesOutstanding ? sharesOutstanding : 0;
         context.setPodiums(assetRef.current);
     },[]);
     
@@ -38,8 +59,11 @@ export const Podium = (props) => {
         for(let price of tradeHistory){
             prices.unshift(price.price);
         }
-        console.log(name);
+        console.log("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+        console.log("asset name: ", name);
         console.log(prices);
+        console.log(tradeHistory);
+        console.log("value: ", value);
     }
 
     const PodCallback = useCallback(() => <>

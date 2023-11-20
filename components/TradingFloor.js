@@ -2,6 +2,7 @@ import react, { Suspense, useEffect, useRef, useState, useContext, useCallback }
 import { Trader } from './Trader';
 import TradingContext from './TradingContext';
 import Podium from './Podium';
+import { TradingFloorHelpers } from './TradingFloorHelpers';
 
 export const TradingFloor = (props) => {
     const { floorWidth, floorHeight, floorId } = props;
@@ -12,18 +13,18 @@ export const TradingFloor = (props) => {
     const [slowing, setSlowing] = useState(1);
     const [floorLeft, setFloorLeft] = useState(-50);
     const [floorRight, setFloorRight] = useState(150);
+
+    const a = .00125;
+    const b = 1000;
+    const c = .0075;
     const floorRef = useRef();
 
-    // ************************** TODO *****************************
-    // Move trading off of the podium and onto the trading floor because context cant keep up
-
     useEffect(() => {
-        floorRef.current.name = `Floor-${floorId}`;
         findConnections((con) => {
             setConnections(con);
         })
     }, []);
-
+    
     useEffect(() => {
         if (context.isRunning) {
             if (!context.tradersIntervalId) {
@@ -46,6 +47,10 @@ export const TradingFloor = (props) => {
     
     const march = () => {
         const trs = [];
+        for(let podium of context.podiums){
+            let asset = TradingFloorHelpers.growAsset(podium);
+            context.setPodiums(asset);
+        }
         findConnections(pos => {
             setConnections(pos);
             for(let trader of context.traders){
@@ -81,10 +86,11 @@ export const TradingFloor = (props) => {
                 trader.y += trader.ySpeed*context.marketEnergy;
                 trs.push(trader);
             }
+            const movedTraders = [];
             for (let trader of trs) {
-                move(trader);
+                movedTraders.push(move(trader));
             }
-            setTraders(trs);
+            setTraders(movedTraders);
         });
         context.setTraders(traders);
     };
@@ -105,10 +111,10 @@ export const TradingFloor = (props) => {
                 && trader.y < podium.bottom - (trader.x-podium.left)*podHeight/podWidth
                 && trader.y > podium.top + (trader.x-podium.left)*podHeight/podWidth
                 && trader.xSpeed > 0) {
-                    console.log("left");
                     trader.xSpeed = -Math.abs(trader.xSpeed);
-                    let shares = 100;
-                    trade(trader,shares,podium);
+                    const traded = trade(trader,podium);
+                    trader.cash += traded.cash;
+                    trader.portfolio[podium.assetName] += traded.shares;
                 }
                 
             // podium right
@@ -119,11 +125,11 @@ export const TradingFloor = (props) => {
                 && trader.y > podium.bottom - (trader.x-podium.left)*podHeight/podWidth
                 && trader.y < podium.top + (trader.x-podium.left)*podHeight/podWidth
                 && trader.xSpeed < 0) {
-                console.log("right");
-                trader.xSpeed = Math.abs(trader.xSpeed);
-                let shares = 100;
-                trade(trader,shares,podium);
-            }
+                    trader.xSpeed = Math.abs(trader.xSpeed);
+                    const traded = trade(trader,podium);
+                    trader.cash += traded.cash;
+                    trader.portfolio[podium.assetName] += traded.shares;
+                }
 
             // podium top
             if (trader.y > podium.top
@@ -133,11 +139,11 @@ export const TradingFloor = (props) => {
                 && trader.y < podium.top + (trader.x-podium.left)*podHeight/podWidth
                 && trader.y < podium.bottom - (trader.x-podium.left)*podHeight/podWidth
                 && trader.ySpeed > 0) {
-                console.log("top");
-                trader.ySpeed = -Math.abs(trader.ySpeed);
-                let shares = 100;
-                trade(trader,shares,podium);
-            }
+                    trader.ySpeed = -Math.abs(trader.ySpeed);
+                    const traded = trade(trader,podium);
+                    trader.cash += traded.cash;
+                    trader.portfolio[podium.assetName] += traded.shares;
+                }
 
             // // podium bottom
              if (trader.y < podium.bottom
@@ -147,11 +153,11 @@ export const TradingFloor = (props) => {
                 && trader.y > podium.top + (trader.x-podium.left)*podHeight/podWidth
                 && trader.y > podium.bottom - (trader.x-podium.left)*podHeight/podWidth
                 && trader.ySpeed < 0) {
-                console.log("bottom");
-                trader.ySpeed = Math.abs(trader.ySpeed);
-                let shares = 100;
-                trade(trader,shares,podium);
-            }
+                    trader.ySpeed = Math.abs(trader.ySpeed);
+                    const traded = trade(trader,podium);
+                    trader.cash += traded.cash;
+                    trader.portfolio[podium.assetName] += traded.shares;
+                }
         }
         // Walls
         // Left
@@ -174,6 +180,7 @@ export const TradingFloor = (props) => {
             trader.ySpeed = -Math.abs(trader.ySpeed);
             trader.y = 100 - trader.size+trader.ySpeed;
         }
+        return trader;
     };
 
     const findConnections = (cb) => {
@@ -252,77 +259,110 @@ export const TradingFloor = (props) => {
         return Math.floor(aim*100)/100;
     }
 
-    const trade = (trader,shares,asset) => {
-        if(Math.random() >= .5){
-            let didBuy = buy(trader,shares,asset.assetName);
-            if(didBuy.status){
-                trader.portfolio[asset.assetName] = trader.portfolio[asset.assetName] ? trader.portfolio[asset.assetName] + shares : shares;
-                trader.cash -= didBuy.cash;
-            }
+    const trade = (trader,asset) => {
+        let short = calculateMovingAverage(trader.movingAverages[0],asset.tradeHistory);
+        let long = calculateMovingAverage(trader.movingAverages[1],asset.tradeHistory);
+        let lastTrade = asset.tradeHistory[0]?.price;
+        let randy = Math.random();
+        const shares = Math.abs(short-long)/long*asset.shareQty+100
+
+        // add an attractiveness variable to the asset to account for the direction of the formations
+        // add an overall market sentiment variable
+        
+        if(randy > (1-trader.riskTolerance)){
+            return buy(trader,Math.floor(trader.cash/asset.bid),asset.assetName);
+        }
+        else if(randy < trader.fearSensitivity) {
+            return sell(trader,trader.portfolio[asset.assetName],asset.assetName);
+        }
+        else if(long > short){
+            return sell(trader,shares/trader.fearSensitivity,asset.assetName);
+        }
+        else if(short > long){
+            return buy(trader,shares,asset.assetName);
         }
         else {
-            let didSell = sell(trader,100,asset.assetName);
-            if(didSell.status) {
-                trader.portfolio[asset.assetName] -= shares;
-                trader.cash += didSell.cash;
-            }
+            return buy(trader,100+100*trader.riskTolerance,asset.assetName);
         }
     }
 
     const buy = (buyer, shares, assetName) => {
-        let asset = context.podiums.find(p => p.assetName === assetName);
-        if(buyer.cash >= shares * asset.bid && asset.sharesAvailable >= shares){
-            asset.sharesOutstanding += shares;
-            asset.cashOnHand += shares * asset.bid;
-            asset.sharesAvailable -= shares;
-            const oldBid = asset.bid;
-            const newBid = asset.bid/.999;
-            const newAsk = asset.ask/.999;
-            const trade = {
-                buyer: buyer.name,
-                assetName,
-                price: oldBid,
-                shares,
-                time: Date.now()
-            };
-            asset.tradeHistory.unshift(trade);
-            asset.bid = newBid;
-            asset.ask = newAsk;
-            context.setPodiums(asset);
-            // console.log("buy: ", trade);
-            return {
-                status: true,
-                cash: shares * asset.bid
-            };
-        }
-        return {status: false};
+        const asset = context.podiums.find(p => p.assetName === assetName);
+        const tradeShares = Math.floor(Math.min(shares,buyer.cash/asset.bid,asset.sharesAvailable));
+        asset.sharesOutstanding += tradeShares;
+        asset.cashOnHand += tradeShares * asset.bid;
+        asset.sharesAvailable -= tradeShares;
+        const sharePortion = tradeShares / asset.sharesAvailable;
+        // console.log("sharePortion: ", sharePortion);
+        const oldBid = asset.bid;
+        const newBid = asset.bid/(1-sharePortion);
+        const newAsk = asset.ask/(1-sharePortion);
+        const value = asset.value;
+        const trade = {
+            buyer: buyer.name,
+            assetName,
+            price: oldBid,
+            tradeShares,
+            value,
+            time: Date.now()
+        };
+        asset.tradeHistory.unshift(trade);
+        asset.bid = newBid;
+        asset.ask = newAsk;
+        context.setPodiums(asset);
+        // console.log("buy shares: ", tradeShares);
+        // console.log("buy cash: ", -tradeShares * asset.bid);
+        return {
+            status: true,
+            shares: tradeShares,
+            cash: -tradeShares * asset.bid
+        };
     }
 
     const sell = (seller, shares, assetName) => {
-        let asset = context.podiums.find(p => p.assetName === assetName);
-        if(seller.portfolio[assetName] >= shares && asset.cashOnHand >= asset.ask){
-            asset.sharesOutstanding -= shares;
-            asset.sharesAvailable += shares;
-            asset.cashOnHand -= shares * asset.bid;
-            const oldAsk = asset.ask;
-            const newAsk = asset.bid*.999;
-            const newBid = asset.ask*.999;
-            asset.tradeHistory.unshift({
-                buyer: seller.name,
-                assetName,
-                price: oldAsk,
-                shares,
-                time: Date.now()
-            })
-            asset.bid = newBid;
-            asset.ask = newAsk;
-            context.setPodiums(asset);
-            return {
-                status: true,
-                cash: shares * asset.bid
-            };
+        const asset = context.podiums.find(p => p.assetName === assetName);
+        const tradeShares = Math.floor(Math.min(seller.portfolio[assetName],shares,asset.cashOnHand/asset.ask));
+        asset.sharesOutstanding -= tradeShares;
+        asset.sharesAvailable += tradeShares;
+        asset.cashOnHand -= tradeShares * asset.bid;
+        const sharePortion = tradeShares / asset.sharesAvailable;
+        // console.log("sharePortion: ", sharePortion);
+        const oldAsk = asset.ask;
+        const newAsk = asset.bid*(1-sharePortion);
+        const newBid = asset.ask*(1-sharePortion);
+        const value = asset.value;
+        asset.tradeHistory.unshift({
+            buyer: seller.name,
+            assetName,
+            price: oldAsk,
+            tradeShares,
+            value,
+            time: Date.now()
+        })
+        asset.bid = newBid;
+        asset.ask = newAsk;
+        context.setPodiums(asset);
+        // console.log("sell shares: ", -tradeShares);
+        // console.log("sell cash: ", tradeShares * asset.ask);
+        return {
+            status: true,
+            shares: -tradeShares,
+            cash: tradeShares * asset.bid
+        };
+    }
+    
+    const calculateMovingAverage = (periods,tradeHistory) => {
+        if(tradeHistory.length < 1) return 0;
+        const closes = [];
+        const groups = Object.groupBy(tradeHistory, ({ time }) => Math.floor(time / 1000));
+        for(let trade of Object.entries(groups)){
+            closes.unshift(trade[1][0].price);
         }
-        return {status: false};
+        let closeTotal = 0;
+        for(let i=0; i<Math.min(periods,closes.length); i++){
+            closeTotal += closes[i];
+        }
+        return closeTotal/Math.min(periods,closes.length);
     }
 
     const PodiumCallback = useCallback(() => 
@@ -343,6 +383,8 @@ export const TradingFloor = (props) => {
                 tradeHistory={p.tradeHistory}
                 xMid={(p.right-p.left)/2+p.left}
                 yMid={(p.bottom-p.top)/2+p.top}
+                waves={p.waves}
+                value={p.value}
             />
         ),
         [context.traders]

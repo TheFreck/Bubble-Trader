@@ -56,8 +56,9 @@ export const helpers = {
             // ySpeed = -.02;
             // xSpeed = Math.random()*1-.5;
             // ySpeed = Math.random()*1*(1-Math.abs(xSpeed))-Math.abs(xSpeed);
-            xSpeed = Math.random()*2-1;
-            ySpeed = Math.random()*2-1;
+            xSpeed = Math.random()*5-2.5;
+            ySpeed = Math.random()*5-2.5;
+            const movingAverages = [Math.floor(Math.random()*10)+5,Math.floor(Math.random()*30)+20]
             stageTraders.push({
                 name: `Trader-${i}`,
                 xSpeed,
@@ -72,7 +73,10 @@ export const helpers = {
                 isGo: false,
                 cash: 10000,
                 portfolio: {},
-                riskTolerance: Math.random()
+                riskTolerance: Math.random(),
+                fearSensitivity: Math.random(),
+                movingAverages,
+                waves: []
             });
         }
         cb(stageTraders);
@@ -91,13 +95,22 @@ export const helpers = {
             let height = bottom - top;
             let xMid = (right-left)/2 + left;
             let yMid = (bottom-top)/2 + top;
-            let shareQty = 10000;
+            let shareQty = 100000;
             let startingPrice = 20;
             let bid = startingPrice/.999;
             let ask = startingPrice*.999;
             let cashOnHand = 1000000;
+            let assetName = helpers.getName(3, 'ticker');
+            let tradeHistory = [{
+                assetName:assetName,
+                price:startingPrice,
+                shares: 0,
+                time: Date.now()-1000
+            }];
+            let value = shareQty * startingPrice;
+            let waves = [];
             pods.push({
-                assetName: helpers.getName(3, 'ticker'),
+                assetName,
                 shareQty,
                 sharesAvailable: shareQty,
                 sharesOutstanding: 0,
@@ -114,7 +127,9 @@ export const helpers = {
                 width,
                 height,
                 i,
-                tradeHistory: []
+                tradeHistory,
+                waves,
+                value
             });
         }
         console.log("creating pods: ", pods);

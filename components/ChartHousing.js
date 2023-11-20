@@ -8,18 +8,14 @@ export const ChartHousing = () => {
     const [asset, setAsset] = useState({ assetName: "none" });
     const [periods, setPeriods] = useState(100);
     const [assetNames, setAssetNames] = useState([]);
-    const [movingAverage, setMovingAverage] = useState(1);
+    const [movingAverage1, setMovingAverage1] = useState(1);
+    const [movingAverage2, setMovingAverage2] = useState(1);
 
     const handleAssetSelection = event => {
         if(event.target.value.toLowerCase() === 'none') {
             setAsset({assetName:'none'});
         }
         else{
-            console.log("set asset: ", event.target.value);
-            console.log("context podiums: ", context.podiums);
-            for(let pod of context.podiums){
-                console.log("podname: ", pod.assetName);
-            }
             setAsset(context.podiums.find(p => p.assetName === event.target.value));
         }
     }
@@ -28,8 +24,11 @@ export const ChartHousing = () => {
         setPeriods(event.target.value);
     }
 
-    const handleMovingAve = event => {
-        setMovingAverage(event.target.value);
+    const handleMovingAve1 = event => {
+        setMovingAverage1(event.target.value);
+    }
+    const handleMovingAve2 = event => {
+        setMovingAverage2(event.target.value);
     }
 
     const PriceChartCallback = useCallback(() => (
@@ -39,11 +38,12 @@ export const ChartHousing = () => {
                     asset={asset}
                     periods={periods}
                     isActive={context.isRunning}
-                    movingAverage={movingAverage}
+                    movingAverage1={movingAverage1}
+                    movingAverage2={movingAverage2}
                 />
             }
         </Suspense>),
-        [context.floorId, context.isRunning,asset.assetName,periods, movingAverage]);
+        [context.floorId, context.isRunning,asset.assetName,periods, movingAverage1]);
 
     return <div
             style={{marginTop: '1em'}}
@@ -68,7 +68,8 @@ export const ChartHousing = () => {
             </Select>
         </FormControl>
         }
-        <TextField label='Moving Average' onChange={handleMovingAve} value={movingAverage} />
+        <TextField label='Moving Average 1' onChange={handleMovingAve1} value={movingAverage1} />
+        <TextField label='Moving Average 2' onChange={handleMovingAve2} value={movingAverage2} />
         <FormControl>
             <InputLabel>Periods</InputLabel>
             <Select

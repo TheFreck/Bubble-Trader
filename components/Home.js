@@ -63,20 +63,17 @@ export const Home = () => {
             let dist = Math.sqrt(Math.pow(trdrs[i].y - trdrs[j].y, 2) + Math.pow(trdrs[i].x - trdrs[j].x, 2));
           }
         }
+        for(let trdr of trdrs){
+          for(let pod of pods){
+            trdr.portfolio[pod.assetName] = 0;
+          }
+        }
         setTraders(trdrs);
         tradersRef.current = trdrs;
         setTradersComplete(true);
       });
     });
   }, [manualTradersOn]);
-
-  // useEffect(() => {
-  //   for(let podium of podiums){
-  //     console.log("name: ", podium.assetName);
-  //     console.log("buy: ", podium.buy);
-  //     console.log("sell: ", podium.sell);
-  //   }
-  // },[podiums]);
 
   const createTrader = ({ x, y, xSpeed, ySpeed }) => {
     setTraders([...traders, {

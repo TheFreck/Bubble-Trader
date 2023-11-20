@@ -34,8 +34,8 @@ export const Trader = ({
     const [myGreen, setMyGreen] = useState(green);
     const [myBlue, setMyBlue] = useState(blue);
     const [myNetworth,setMyNetworth] = useState(cash);
-    const [myRiskTolerance, setMyRiskTolerance] = useState(0);
-    const [myFearSensitivity, setMyFearSensitivity] = useState(0);
+    const myRiskTolerance = Math.random();
+    const myFearSensitivity = Math.random();
 
     //**************************************************************************** */
     // add a magnitude modifier to be adjustable at the level of the TradingFloor
@@ -61,15 +61,12 @@ export const Trader = ({
             cy={`${myY}%`}
             r={`${mySize}%`}
             transform={`rotate(${myAim?myAim:0},${myX?myX:0},${myY?myY:0})`}
-            cash={myCash}
+            cash={cash}
             networth={myNetworth ? myNetworth : 0}
             risk-tolerance={myRiskTolerance}
+            fear-sensitivity={myFearSensitivity}
         />
     );
-
-    // useEffect(() => {
-    //     calculateNetworth();
-    // },[cash]);
 
     const calculateNetworth = () => {
         if(!myCash && !Object.entries(myPortfolio).length) {
@@ -116,17 +113,19 @@ export const Trader = ({
     );
 
     const Label = () => {
-        return <text 
-            x={myX}
-            y={myY}
-            stroke='black'
-            strokeWidth={.1}
-            fontSize='.25em'
-        >
-            {/* (x: {Math.floor(myX*100)/100}, y: {Math.floor(myY*100)/100}) */}
-            {/* {myIndex} */}
-            {Math.floor(myNetworth*100)/100}
-        </text>
+        return (myNetworth &&
+            <text 
+                x={myX}
+                y={myY}
+                stroke='black'
+                strokeWidth={.1}
+                fontSize='.25em'
+            >
+                {/* (x: {Math.floor(myX*100)/100}, y: {Math.floor(myY*100)/100}) */}
+                {/* {myIndex} */}
+                {Math.floor(myNetworth*100)/100}
+            </text>
+        )
     } 
 
     return (
