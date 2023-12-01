@@ -1,7 +1,4 @@
 export const TradingFloorHelpers = {
-    a: .0125,
-    b: 20,
-    c: .0075,
     createWave: (asset) => {
         const magnitude = TradingFloorHelpers.getMagnitude();
         const duration = Math.floor(Math.random()*100);
@@ -15,17 +12,24 @@ export const TradingFloorHelpers = {
     growAsset: (asset) => {
         const waves = TradingFloorHelpers.createWave(asset);
         let growth = 0;
-        for(let wave of waves){
-            let growthCycle =  TradingFloorHelpers.getGrowthCycle(wave.duration/20);
-            growth += wave.magnitude * growthCycle;
+        for(let i=0; i<waves.length; i++){
+            let growthCycle =  TradingFloorHelpers.getGrowthCycle(waves[i].duration/20)/100;
+            // console.log("growthCycle: ", growthCycle);
+            growth += waves[i].magnitude * growthCycle;
+            waves[i].duration--;
         }
-        asset.value += growth;
+        asset.waves = waves.filter(w => w.duration > 0);
+        // console.log("growth: ", growth);
+        asset.value *= 1+growth;
         return asset;
     },
     getMagnitude: () => {
         let randy = Math.random();
-        let mag = Math.atan(-TradingFloorHelpers.b*(1+TradingFloorHelpers.c))-TradingFloorHelpers.a;
-        return Math.tan(randy * mag - TradingFloorHelpers.a)/TradingFloorHelpers.b+TradingFloorHelpers.c;
+        let a = .1;
+        let b = 10000;
+        let c = .00025;
+        let mag = Math.atan(-b*(1+c))-a;
+        return Math.tan(randy * mag - a)/b+c;
     },
     getGrowthCycle: (period) => {
         // marginal growth curve
@@ -33,3 +37,5 @@ export const TradingFloorHelpers = {
         return cycle;
     }
 }
+
+export default TradingFloorHelpers;

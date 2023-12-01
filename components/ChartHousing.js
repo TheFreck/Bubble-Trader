@@ -1,7 +1,8 @@
 import React, { Suspense, useCallback, useContext, useEffect, useRef, useState } from "react";
 import TradingContext from "./TradingContext";
 import PriceChart from "./PriceChart";
-import { FormControl, InputLabel, MenuItem, Select, TextField, Typography } from "@mui/material";
+import { FormControl, InputLabel, MenuItem, Select, TextField, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
+import { AutoGraph } from "@mui/icons-material";
 
 export const ChartHousing = () => {
     const context = useContext(TradingContext);
@@ -10,6 +11,8 @@ export const ChartHousing = () => {
     const [assetNames, setAssetNames] = useState([]);
     const [movingAverage1, setMovingAverage1] = useState(1);
     const [movingAverage2, setMovingAverage2] = useState(1);
+    const [displayPrice, setDisplayPrice] = useState(true);
+    const [displayValue, setDisplayValue] = useState(true);
 
     const handleAssetSelection = event => {
         if(event.target.value.toLowerCase() === 'none') {
@@ -27,6 +30,7 @@ export const ChartHousing = () => {
     const handleMovingAve1 = event => {
         setMovingAverage1(event.target.value);
     }
+    
     const handleMovingAve2 = event => {
         setMovingAverage2(event.target.value);
     }
@@ -40,10 +44,12 @@ export const ChartHousing = () => {
                     isActive={context.isRunning}
                     movingAverage1={movingAverage1}
                     movingAverage2={movingAverage2}
+                    displayPrice={displayPrice}
+                    displayValue={displayValue}
                 />
             }
         </Suspense>),
-        [context.floorId, context.isRunning,asset.assetName,periods, movingAverage1]);
+        [context.floorId, context.isRunning,asset.assetName,periods, movingAverage1,displayPrice,displayValue]);
 
     return <div
             style={{marginTop: '1em'}}
@@ -87,6 +93,22 @@ export const ChartHousing = () => {
                 <MenuItem value={10000}>10000</MenuItem>
             </Select>
         </FormControl>
+        <ToggleButton
+            value="prices"
+            selected={displayPrice}
+            onChange={() => setDisplayPrice(!displayPrice)}
+        >
+            <span>Price</span>
+            <AutoGraph />
+        </ToggleButton>
+        <ToggleButton
+            value="value"
+            selected={displayValue}
+            onChange={() => setDisplayValue(!displayValue)}
+        >
+        <span>Value</span>
+            <AutoGraph />
+        </ToggleButton>
             
         <PriceChartCallback />
     </div>

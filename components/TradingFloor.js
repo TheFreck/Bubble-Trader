@@ -293,11 +293,10 @@ export const TradingFloor = (props) => {
         asset.cashOnHand += tradeShares * asset.bid;
         asset.sharesAvailable -= tradeShares;
         const sharePortion = tradeShares / asset.sharesAvailable;
-        // console.log("sharePortion: ", sharePortion);
         const oldBid = asset.bid;
-        const newBid = asset.bid/(1-sharePortion);
-        const newAsk = asset.ask/(1-sharePortion);
-        const value = asset.value;
+        const value = asset.value/asset.shareQty;
+        const newBid = value/(1-sharePortion);
+        const newAsk = value*(1-sharePortion);
         const trade = {
             buyer: buyer.name,
             assetName,
@@ -310,8 +309,6 @@ export const TradingFloor = (props) => {
         asset.bid = newBid;
         asset.ask = newAsk;
         context.setPodiums(asset);
-        // console.log("buy shares: ", tradeShares);
-        // console.log("buy cash: ", -tradeShares * asset.bid);
         return {
             status: true,
             shares: tradeShares,
@@ -328,9 +325,9 @@ export const TradingFloor = (props) => {
         const sharePortion = tradeShares / asset.sharesAvailable;
         // console.log("sharePortion: ", sharePortion);
         const oldAsk = asset.ask;
-        const newAsk = asset.bid*(1-sharePortion);
-        const newBid = asset.ask*(1-sharePortion);
-        const value = asset.value;
+        const value = asset.value/asset.shareQty;
+        const newAsk = value*(1-sharePortion);
+        const newBid = value/(1-sharePortion);
         asset.tradeHistory.unshift({
             buyer: seller.name,
             assetName,

@@ -1,4 +1,3 @@
-
 export const helpers = {
     getTraders: (assets, nTraders, tSize, cb) => {
         const availableXs = [200, -200];

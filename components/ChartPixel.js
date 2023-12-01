@@ -23,10 +23,14 @@ export const ChartPixel = (props) => {
         average2,
         yesterAve2,
         isFinal,
+        displayPrice,
         displayValue,
-        value
+        value,
+        valueHigh,
+        valueLow
     } = props;
     const span = highest - lowest;
+    const valueSpan = valueHigh-valueLow;
     const relativeHigh = (high - lowest) / span * 100;
     const relativeLow = (low - lowest) / span * 100;
     const relativeOpen = (open - lowest) / span * 100;
@@ -36,42 +40,47 @@ export const ChartPixel = (props) => {
     const relativeAverage2 = (average2 - lowest) / span * 100;
     const relativeYesterAve1 = (yesterAve1 - lowest) / span * 100;
     const relativeYesterAve2 = (yesterAve2 - lowest) / span * 100;
-    const relativeValue = (value- lowest) / span * 100;
+    const relativeValue = (value - valueLow) / valueSpan * 100;
     
     useEffect(() => {
-        if(isNaN(value)) return;
+        if(isNaN(value) || !highest || !lowest || !open  || !close) return;
     },[]);
 
     return (
         <>
-            <line
-                name='wick'
-                x1={`${index * width + width / 2}%`}
-                x2={`${index * width + width / 2}%`}
-                y1={`${60 - (relativeLow !== relativeHigh ? relativeHigh : relativeHigh) * .5}%`}
-                y2={`${60 - (relativeLow !== relativeHigh ? relativeLow : relativeLow) * .5}%`}
-                stroke={close > open ? 'green' : 'red'}
-                strokeWidth='.1%'
-            />
-            <rect
-                name="candlestick"
-                x={`${index * width}%`}
-                y={`${60 - Math.min(relativeClose, relativeOpen) * .5}%`}
-                height={`${Math.abs(relativeClose - relativeOpen) > 0 ? Math.abs(relativeClose - relativeOpen) : .1}%`}
-                width={`${width}%`}
-                stroke={close > open ? 'green' : 'red'}
-                strokeWidth='.1%'
-                fill={close > open ? 'lightgreen' : 'pink'}
-                data-open={open}
-                data-close={close}
-                data-high={high}
-                data-low={low}
-                data-time={time}
-                index={index}
-            />
-            { // Moving average
-                displayAverage &&
-                <>
+            { // Wick
+                displayPrice && relativeOpen && relativeClose && relativeHigh && relativeLow && width &&
+                <line
+                    name='wick'
+                    x1={`${index * width + width / 2}%`}
+                    x2={`${index * width + width / 2}%`}
+                    y1={`${60 - (relativeLow !== relativeHigh ? relativeHigh : relativeHigh) * .5}%`}
+                    y2={`${60 - (relativeLow !== relativeHigh ? relativeLow : relativeLow) * .5}%`}
+                    stroke={relativeClose > relativeOpen ? 'green' : 'red'}
+                    strokeWidth='.1%'
+                />
+            }
+            { // Candle
+                displayPrice && relativeClose && relativeOpen && close && open && high && low && time && width && 
+                <rect
+                    name="candlestick"
+                    x={`${index * width}%`}
+                    y={`${60 - Math.min(relativeClose, relativeOpen) * .5}%`}
+                    height={`${Math.abs(relativeClose - relativeOpen) > 0 ? Math.abs(relativeClose - relativeOpen) : .1}%`}
+                    width={`${width}%`}
+                    stroke={close > open ? 'green' : 'red'}
+                    strokeWidth='.1%'
+                    fill={close > open ? 'lightgreen' : 'pink'}
+                    data-open={open}
+                    data-close={close}
+                    data-high={high}
+                    data-low={low}
+                    data-time={time}
+                    index={index}
+                />
+            }
+            { // Moving average 1
+                displayPrice && displayAverage && average1 && relativeAverage1 && relativeYesterAve1 && width && 
                 <line
                     x1={`${index * width - width / 2}%`}
                     x2={`${index * width + width / 2}%`}
@@ -82,6 +91,9 @@ export const ChartPixel = (props) => {
                     name='average1'
                     average={`${average1}`}
                 />
+            }
+            { // Moving average 2
+                displayPrice && displayAverage && average2 && relativeAverage2 && relativeYesterAve2 && width &&
                 <line
                     x1={`${index * width - width / 2}%`}
                     x2={`${index * width + width / 2}%`}
@@ -92,7 +104,6 @@ export const ChartPixel = (props) => {
                     name='average2'
                     average={`${average2}`}
                 />
-                </>
             }
             { // Time
                 index % 15 === 0 &&
@@ -110,24 +121,27 @@ export const ChartPixel = (props) => {
                         />
                     }
                     {// Vertical grid
-                        displayTime &&
-                        <text
-                            x={`${index * width + width / 2}%`}
-                            y='90%'
-                            fontSize={'.5em'}
-                        >{index}</text>}
-                    <line
-                        x1={`${index * width + width / 2}%`}
-                        x2={`${index * width + width / 2}%`}
-                        y1='0%'
-                        y2='100%'
-                        stroke='black'
-                        strokeWidth={.25}
-                    />
+                        displayTime && width &&
+                        <>
+                            <text
+                                x={`${index * width + width / 2}%`}
+                                y='90%'
+                                fontSize={'.5em'}
+                            >{index}</text>
+                            <line
+                                x1={`${index * width + width / 2}%`}
+                                x2={`${index * width + width / 2}%`}
+                                y1='0%'
+                                y2='100%'
+                                stroke='black'
+                                strokeWidth={.25}
+                            />
+                        </>
+                    }
                 </>
             }
             { // Volume
-                displayVolume &&
+                displayVolume && width && relativeVolume && volumeHigh && (volume || volume === 0) &&
                 <>
                     <rect
                         name='volume'
@@ -159,18 +173,19 @@ export const ChartPixel = (props) => {
                 </>
             }
             { // Value
+                displayValue && width && relativeValue &&
                 <circle
                     cx={`${index * width + width / 2}%`}
-                    cy={`${60-relativeValue*.5}%`}
-                    r={width/2}
+                    cy={`${100-relativeValue}%`}
+                    r={width/10}
                     stroke='blue'
                     fill='blue'
                     name='value'
-                    value={`${relativeValue}%`}
+                    value={`${value}%`}
                 />
             }
             { // price label
-                isFinal &&
+                isFinal && width && relativeClose && relativeOpen && relativeAverage1 &&  relativeAverage2 && average1 && average2 &&
                 <>
                     <line
                         x1={`${index * width + width + 50}%`}

@@ -17,7 +17,7 @@ export const Home = () => {
   const [time, setTime] = useState(0);
   const [connections, setConnections] = useState([]);
   const [bounces, setBounces] = useState([]);
-  const [nAssets, setNassets] = useState(2);
+  const [nAssets, setNassets] = useState(1);
   const [podiums, pushPodiums] = useState([]);
   const [tradingFloor, setTradingFloor] = useState(0);
   const [tradersComplete, setTradersComplete] = useState(false);
