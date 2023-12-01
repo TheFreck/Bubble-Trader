@@ -47,9 +47,11 @@ export const TradingFloor = (props) => {
     
     const march = () => {
         const trs = [];
-        for(let podium of context.podiums){
-            let asset = TradingFloorHelpers.growAsset(podium);
-            context.setPodiums(asset);
+        if(!Math.floor(Date.now()*10000)%0){
+            for(let podium of context.podiums){
+                let asset = TradingFloorHelpers.growAsset(podium);
+                context.setPodiums(asset);
+            }
         }
         findConnections(pos => {
             setConnections(pos);
@@ -113,8 +115,10 @@ export const TradingFloor = (props) => {
                 && trader.xSpeed > 0) {
                     trader.xSpeed = -Math.abs(trader.xSpeed);
                     const traded = trade(trader,podium);
-                    trader.cash += traded.cash;
-                    trader.portfolio[podium.assetName] += traded.shares;
+                    if(traded.status){
+                        trader.cash += traded.cash;
+                        trader.portfolio[podium.assetName] += traded.shares;
+                    }
                 }
                 
             // podium right
@@ -127,8 +131,10 @@ export const TradingFloor = (props) => {
                 && trader.xSpeed < 0) {
                     trader.xSpeed = Math.abs(trader.xSpeed);
                     const traded = trade(trader,podium);
-                    trader.cash += traded.cash;
-                    trader.portfolio[podium.assetName] += traded.shares;
+                    if(traded.status){
+                        trader.cash += traded.cash;
+                        trader.portfolio[podium.assetName] += traded.shares;
+                    }
                 }
 
             // podium top
@@ -141,8 +147,10 @@ export const TradingFloor = (props) => {
                 && trader.ySpeed > 0) {
                     trader.ySpeed = -Math.abs(trader.ySpeed);
                     const traded = trade(trader,podium);
-                    trader.cash += traded.cash;
-                    trader.portfolio[podium.assetName] += traded.shares;
+                    if(traded.status){
+                        trader.cash += traded.cash;
+                        trader.portfolio[podium.assetName] += traded.shares;
+                    }
                 }
 
             // // podium bottom
@@ -155,8 +163,10 @@ export const TradingFloor = (props) => {
                 && trader.ySpeed < 0) {
                     trader.ySpeed = Math.abs(trader.ySpeed);
                     const traded = trade(trader,podium);
-                    trader.cash += traded.cash;
-                    trader.portfolio[podium.assetName] += traded.shares;
+                    if(traded.status){
+                        trader.cash += traded.cash;
+                        trader.portfolio[podium.assetName] += traded.shares;
+                    }
                 }
         }
         // Walls
@@ -262,27 +272,43 @@ export const TradingFloor = (props) => {
     const trade = (trader,asset) => {
         let short = calculateMovingAverage(trader.movingAverages[0],asset.tradeHistory);
         let long = calculateMovingAverage(trader.movingAverages[1],asset.tradeHistory);
-        let lastTrade = asset.tradeHistory[0]?.price;
+        let lastTrade = asset.tradeHistory[0]?.type;
         let randy = Math.random();
         const shares = Math.abs(short-long)/long*asset.shareQty+100
-
+        const buyableShares = Math.min(Math.floor(trader.cash/asset.bid),shares);
+        const sellabelShares = Math.min(trader.portfolio[asset.assetName],shares);
+        
         // add an attractiveness variable to the asset to account for the direction of the formations
         // add an overall market sentiment variable
-        
-        if(randy > (1-trader.riskTolerance)){
-            return buy(trader,Math.floor(trader.cash/asset.bid),asset.assetName);
+        console.log("lastTrade: ", lastTrade);
+        console.log('risk: ', trader.riskTolerance);
+        console.log('fear: ', trader.fearSensitivity);
+        console.log("randy: ", randy);
+        if(lastTrade === 'buy'){
+            if(randy > trader.fearSensitivity) {
+                console.log("sellableShares: ", sellabelShares);
+                if(sellabelShares)
+                    return sell(trader,sellabelShares,asset.assetName);
+                else
+                    return {status: false};
+            }
+            else{
+                console.log("buyableShares: ", buyableShares);
+                return buy(trader,buyableShares,asset.assetName);
+            }
         }
-        else if(randy < trader.fearSensitivity) {
-            return sell(trader,trader.portfolio[asset.assetName],asset.assetName);
-        }
-        else if(long > short){
-            return sell(trader,shares/trader.fearSensitivity,asset.assetName);
-        }
-        else if(short > long){
-            return buy(trader,shares,asset.assetName);
-        }
-        else {
-            return buy(trader,100+100*trader.riskTolerance,asset.assetName);
+        if(lastTrade === 'sell'){
+            if(randy > (1-trader.riskTolerance)){
+                console.log("buyableShares: ", buyableShares);
+                return buy(trader,buyableShares,asset.assetName);
+            }
+            else{
+                console.log("sellableShares: ", sellabelShares);
+                if(sellabelShares)
+                    return sell(trader,sellabelShares,asset.assetName);
+                else
+                    return {status: false};
+            }
         }
     }
 
@@ -297,23 +323,30 @@ export const TradingFloor = (props) => {
         const value = asset.value/asset.shareQty;
         const newBid = value/(1-sharePortion);
         const newAsk = value*(1-sharePortion);
+        if(tradeShares){
         const trade = {
             buyer: buyer.name,
             assetName,
             price: oldBid,
             tradeShares,
             value,
+            type: 'buy',
             time: Date.now()
         };
         asset.tradeHistory.unshift(trade);
         asset.bid = newBid;
         asset.ask = newAsk;
         context.setPodiums(asset);
-        return {
+        const buyOut = {
             status: true,
             shares: tradeShares,
             cash: -tradeShares * asset.bid
         };
+        return buyOut;
+    }
+    else{
+        return {status: false};
+    }
     }
 
     const sell = (seller, shares, assetName) => {
@@ -323,29 +356,33 @@ export const TradingFloor = (props) => {
         asset.sharesAvailable += tradeShares;
         asset.cashOnHand -= tradeShares * asset.bid;
         const sharePortion = tradeShares / asset.sharesAvailable;
-        // console.log("sharePortion: ", sharePortion);
         const oldAsk = asset.ask;
         const value = asset.value/asset.shareQty;
         const newAsk = value*(1-sharePortion);
         const newBid = value/(1-sharePortion);
-        asset.tradeHistory.unshift({
-            buyer: seller.name,
-            assetName,
-            price: oldAsk,
-            tradeShares,
-            value,
-            time: Date.now()
-        })
-        asset.bid = newBid;
-        asset.ask = newAsk;
-        context.setPodiums(asset);
-        // console.log("sell shares: ", -tradeShares);
-        // console.log("sell cash: ", tradeShares * asset.ask);
-        return {
-            status: true,
-            shares: -tradeShares,
-            cash: tradeShares * asset.bid
-        };
+        if(tradeShares){
+            asset.tradeHistory.unshift({
+                buyer: seller.name,
+                assetName,
+                price: oldAsk,
+                tradeShares,
+                value,
+                type: 'sell',
+                time: Date.now()
+            })
+            asset.bid = newBid;
+            asset.ask = newAsk;
+            context.setPodiums(asset);
+            const sellOut = {
+                status: true,
+                shares: -tradeShares,
+                cash: tradeShares * asset.bid
+            };
+            return sellOut;
+        }
+        else{
+            return {status: false};
+        }
     }
     
     const calculateMovingAverage = (periods,tradeHistory) => {

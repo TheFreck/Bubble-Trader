@@ -13,6 +13,8 @@ export const ChartHousing = () => {
     const [movingAverage2, setMovingAverage2] = useState(1);
     const [displayPrice, setDisplayPrice] = useState(true);
     const [displayValue, setDisplayValue] = useState(true);
+    const [displayMovingAverages, setDisplayMovingAverages] = useState(true);
+    const [displayType,setDisplayType] = useState('ohlc');
 
     const handleAssetSelection = event => {
         if(event.target.value.toLowerCase() === 'none') {
@@ -30,9 +32,15 @@ export const ChartHousing = () => {
     const handleMovingAve1 = event => {
         setMovingAverage1(event.target.value);
     }
-    
+
     const handleMovingAve2 = event => {
         setMovingAverage2(event.target.value);
+    }
+
+    const handleDisplayType = (event,newType) => {
+        console.log("event: ", event);
+        console.log("newType: ", newType);
+        setDisplayType(newType);
     }
 
     const PriceChartCallback = useCallback(() => (
@@ -46,10 +54,12 @@ export const ChartHousing = () => {
                     movingAverage2={movingAverage2}
                     displayPrice={displayPrice}
                     displayValue={displayValue}
+                    displayMovingAverages={displayMovingAverages}
+                    displayType={displayType}
                 />
             }
         </Suspense>),
-        [context.floorId, context.isRunning,asset.assetName,periods, movingAverage1,displayPrice,displayValue]);
+        [context.floorId, context.isRunning,asset.assetName,periods, movingAverage1,displayPrice,displayValue,displayMovingAverages,displayType]);
 
     return <div
             style={{marginTop: '1em'}}
@@ -57,7 +67,7 @@ export const ChartHousing = () => {
         {asset && assetNames &&
         <FormControl
             style={{minWidth: '5vw'}}
-            >
+        >
             <InputLabel>Asset</InputLabel>
             <Select
                 label='Asset'
@@ -109,6 +119,33 @@ export const ChartHousing = () => {
         <span>Value</span>
             <AutoGraph />
         </ToggleButton>
+        <ToggleButton
+            value="ma"
+            selected={displayMovingAverages}
+            onChange={() => setDisplayMovingAverages(!displayMovingAverages)}
+        >
+        <span>MA</span>
+            <AutoGraph />
+        </ToggleButton>
+        <ToggleButtonGroup
+            exclusive
+            onChange={handleDisplayType}
+        >
+            <ToggleButton
+                value='ohlc'
+                selected={displayType === 'ohlc'}
+            >
+                <span>OHLC</span>
+                <AutoGraph />
+            </ToggleButton>
+            <ToggleButton
+                value='line'
+                selected={displayType === 'line'}
+            >
+                <span>Line</span>
+                <AutoGraph />
+            </ToggleButton>
+        </ToggleButtonGroup>
             
         <PriceChartCallback />
     </div>

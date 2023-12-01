@@ -3,7 +3,7 @@ import TradingContext from "./TradingContext";
 import ChartPixel from "./ChartPixel";
 import PriceAxis from "./PriceAxis";
 
-export const PriceChart = ({asset,periods,isActive, movingAverage1,movingAverage2,displayPrice,displayValue}) => {
+export const PriceChart = ({asset,periods,isActive, movingAverage1,movingAverage2,displayPrice,displayValue,displayMovingAverages,displayType}) => {
     const context = useContext(TradingContext);
     const chartRef = useRef();
     const [prices, setPrices] = useState([]);
@@ -79,19 +79,19 @@ export const PriceChart = ({asset,periods,isActive, movingAverage1,movingAverage
                     volume += Math.abs(group[1][i].tradeShares);
                     groupValue += group[1][i].value;
                 }
-                let value = groupValue/group[1].length/asset.shareQty;
+                let value = (groupValue/group[1].length);
                 let closeSum = 0;
                 for(let i=0; i<Math.min(movingAverage1,trades.length); i++){
                     closeSum+=trades[i].close;
                 }
-                const average1 = trades.length > 0 ? closeSum/Math.min(movingAverage1,trades.length) : close;
-                const yesterAve1 = trades.length > 0 ? trades[0].average1 : close;
+                const average1 = trades.length > 0 ? closeSum/Math.min(movingAverage1,trades.length) : group[1][0].price;
+                const yesterAve1 = trades.length > 0 ? trades[0].average1 : group[1][0].price;
                 closeSum = 0;
                 for(let i=0; i<Math.min(movingAverage2,trades.length); i++){
                     closeSum+=trades[i].close;
                 }
-                const average2 = trades.length > 0 ? closeSum/Math.min(movingAverage2,trades.length) : close;
-                const yesterAve2 = trades.length > 0 ? trades[0].average2 : close;
+                const average2 = trades.length > 0 ? closeSum/Math.min(movingAverage2,trades.length) : group[1][0].price;
+                const yesterAve2 = trades.length > 0 ? trades[0].average2 : group[1][0].price;
                 trades.unshift({ open, close, high, low, groupId, volume, value, average1, yesterAve1, average2, yesterAve2 });
             }
         }
@@ -99,17 +99,26 @@ export const PriceChart = ({asset,periods,isActive, movingAverage1,movingAverage
         let highVolume = 0;
         let highest = 0;
         let lowest = Number.MAX_SAFE_INTEGER;
-        let value = 0;
+        let value = 20;
         let highValue = 0;
         let lowValue = Number.MAX_SAFE_INTEGER;
-        for (let i = 0; i < Math.min(periods, trades.length); i++) {
-            value = trades[i].value;
-            periodTrades.unshift(trades[i]);
-            highest = trades[i].high > highest ? trades[i].high : highest;
-            lowest = trades[i].low < lowest ? trades[i].low : lowest;
-            highVolume = trades[i].volume > highVolume ? trades[i].volume : highVolume;
-            highValue = trades[i].value > highValue ? trades[i].value : highValue;
-            lowValue = trades[i].value < lowValue ? trades[i].value : lowValue;
+        for (let i = 1; i <= Math.min(periods, trades.length) ; i++) {
+            if(trades[i-1] && !trades[i-1].close){
+                trades[i-1].close = value;
+            }
+            if(trades[i]) {
+                if(!trades[i]?.value){
+                    trades[i].value = value;
+                }
+                value = trades[i].value;
+                trades[i].yesterAve = (trades.length > 0 && trades[i-1]?.close) ? (trades[i-1]?.close + trades[i-1]?.open + trades[i-1]?.high + trades[i-1]?.low)/4 : value;
+                periodTrades.unshift(trades[i]);
+                highest = trades[i].high > highest ? trades[i].high : highest;
+                lowest = trades[i].low < lowest ? trades[i].low : lowest;
+                highVolume = trades[i].volume > highVolume ? trades[i].volume : highVolume;
+                highValue = trades[i].value > highValue ? trades[i].value : highValue;
+                lowValue = trades[i].value < lowValue ? trades[i].value : lowValue;
+            }
         }
         cb({periodTrades,highest,lowest,highVolume,value,lowValue,highValue});
     }
@@ -154,22 +163,24 @@ export const PriceChart = ({asset,periods,isActive, movingAverage1,movingAverage
                     yesterAve1={p.yesterAve1}
                     average2={p.average2}
                     yesterAve2={p.yesterAve2}
-                    displayAverage={true}
+                    displayAverage={displayMovingAverages}
                     isFinal={i===prices.length-1}
                     displayValue={displayValue}
                     displayPrice={displayPrice}
                     value={p.value}
                     valueHigh={valueHigh}
                     valueLow={valueLow}
+                    displayType={displayType}
+                    yesterAve={p.yesterAve}
                 />
             )))},
-        [prices,asset,periods,context.isRunning,displayPrice,displayValue]);
+        [prices,asset,periods,context.isRunning,displayPrice,displayValue,displayMovingAverages,displayType]);
 
     return (
         <svg
             viewBox={`0 0 200 100`}
             width={`${context.floorWidth-10}vw`}
-            height={`${context.floorHeight-20}vh`}
+            height={`${context.floorHeight-30}vh`}
             xmlns="http://www.w3.org/2000/svg"
             style={{ background: 'gray', marginLeft: '5vw', marginRight: '5vw',width: `${context.floorWidth*.9}vw` }}
             ref={chartRef}

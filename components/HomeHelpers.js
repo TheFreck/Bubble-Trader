@@ -41,22 +41,8 @@ export const helpers = {
         let stageTraders = [];
         for (let i = 0; i < nTraders; i++) {
             const position = getCoords();
-            let y = i%2 ? 35 : 50;
-            let x = i%2 ? 42.5 : 50;
-            let ySpeed = i===0 ? 4 : 0;
-            let xSpeed = i===0 ? 3 : 0;
-            // x = -50;
-            // y = 50;
-            // xSpeed = (Math.random()*1-.5)*tSize;
-            // ySpeed = (Math.random()*1-.5)*tSize;
-            // position.x = -20;
-            // position.y = 50;
-            // xSpeed = .5;
-            // ySpeed = -.02;
-            // xSpeed = Math.random()*1-.5;
-            // ySpeed = Math.random()*1*(1-Math.abs(xSpeed))-Math.abs(xSpeed);
-            xSpeed = Math.random()*5-2.5;
-            ySpeed = Math.random()*5-2.5;
+            const xSpeed = Math.random()*5-2.5;
+            const ySpeed = Math.random()*5-2.5;
             const movingAverages = [Math.floor(Math.random()*10)+5,Math.floor(Math.random()*30)+20]
             stageTraders.push({
                 name: `Trader-${i}`,
@@ -72,10 +58,9 @@ export const helpers = {
                 isGo: false,
                 cash: 10000,
                 portfolio: {},
-                riskTolerance: Math.random(),
-                fearSensitivity: Math.random(),
+                riskTolerance: (Math.random()+30)/31,
+                fearSensitivity: (Math.random()+30)/31,
                 movingAverages,
-                waves: []
             });
         }
         cb(stageTraders);
@@ -89,8 +74,6 @@ export const helpers = {
             let bottom = Math.random()*50+50;
             let left = i * spacing-50 + Math.random()*width/2;
             let right = i * spacing + width-50 + Math.random()*width/2;
-            // top=25;
-            // bottom=75;
             let height = bottom - top;
             let xMid = (right-left)/2 + left;
             let yMid = (bottom-top)/2 + top;
@@ -104,6 +87,7 @@ export const helpers = {
                 assetName:assetName,
                 price:startingPrice,
                 shares: 0,
+                type:'buy',
                 time: Date.now()-1000
             }];
             let value = shareQty * startingPrice;
@@ -131,7 +115,6 @@ export const helpers = {
                 value
             });
         }
-        console.log("creating pods: ", pods);
         cb(pods);
     },
     getName: (chars, type) => {

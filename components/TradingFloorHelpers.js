@@ -25,9 +25,9 @@ export const TradingFloorHelpers = {
     },
     getMagnitude: () => {
         let randy = Math.random();
-        let a = .1;
-        let b = 10000;
-        let c = .00025;
+        let a = .01;
+        let b = 100000;
+        let c = .00005;
         let mag = Math.atan(-b*(1+c))-a;
         return Math.tan(randy * mag - a)/b+c;
     },
