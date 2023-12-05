@@ -202,7 +202,7 @@ export const ChartPixel = (props) => {
                         stroke='blue'
                         fill='blue'
                         name='value'
-                        value={`${value}%`}
+                        value={value}
                     />
                 </>
             }

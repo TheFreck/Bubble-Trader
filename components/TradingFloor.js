@@ -20,6 +20,9 @@ export const TradingFloor = (props) => {
     const floorRef = useRef();
 
     useEffect(() => {
+        for(let podium of context.podiums){
+            podium.waves = TradingFloorHelpers.createWave(podium);
+        }
         findConnections((con) => {
             setConnections(con);
         })
@@ -47,11 +50,17 @@ export const TradingFloor = (props) => {
     
     const march = () => {
         const trs = [];
-        if(!Math.floor(Date.now()*10000)%0){
+        const now = Math.floor(Date.now()/100);
+        if(Math.floor(Date.now()/100)%10===0){
+            console.log("sending to make waves");
             for(let podium of context.podiums){
-                let asset = TradingFloorHelpers.growAsset(podium);
-                context.setPodiums(asset);
+                podium.waves = TradingFloorHelpers.createWave(podium);
             }
+        }
+        for(let podium of context.podiums){
+            console.log("grow podium");
+            let asset = TradingFloorHelpers.growAsset(podium);
+            context.setPodiums(asset);
         }
         findConnections(pos => {
             setConnections(pos);
@@ -280,30 +289,22 @@ export const TradingFloor = (props) => {
         
         // add an attractiveness variable to the asset to account for the direction of the formations
         // add an overall market sentiment variable
-        console.log("lastTrade: ", lastTrade);
-        console.log('risk: ', trader.riskTolerance);
-        console.log('fear: ', trader.fearSensitivity);
-        console.log("randy: ", randy);
         if(lastTrade === 'buy'){
             if(randy > trader.fearSensitivity) {
-                console.log("sellableShares: ", sellabelShares);
                 if(sellabelShares)
                     return sell(trader,sellabelShares,asset.assetName);
                 else
                     return {status: false};
             }
             else{
-                console.log("buyableShares: ", buyableShares);
                 return buy(trader,buyableShares,asset.assetName);
             }
         }
         if(lastTrade === 'sell'){
             if(randy > (1-trader.riskTolerance)){
-                console.log("buyableShares: ", buyableShares);
                 return buy(trader,buyableShares,asset.assetName);
             }
             else{
-                console.log("sellableShares: ", sellabelShares);
                 if(sellabelShares)
                     return sell(trader,sellabelShares,asset.assetName);
                 else

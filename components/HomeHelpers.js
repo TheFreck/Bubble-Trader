@@ -58,8 +58,8 @@ export const helpers = {
                 isGo: false,
                 cash: 10000,
                 portfolio: {},
-                riskTolerance: (Math.random()+30)/31,
-                fearSensitivity: (Math.random()+30)/31,
+                riskTolerance: (Math.random()+9)/11,
+                fearSensitivity: (Math.random()+9)/11,
                 movingAverages,
             });
         }

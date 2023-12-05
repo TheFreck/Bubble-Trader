@@ -129,7 +129,7 @@ export const PriceChart = ({asset,periods,isActive, movingAverage1,movingAverage
             side='right'
             max={max}
             min={min}
-        />,[prices,context.isRunning,displayPrice]
+        />,[context.isRunning,displayPrice]
     );
 
     const ValueAxisCallback = useCallback(() => 
@@ -138,7 +138,7 @@ export const PriceChart = ({asset,periods,isActive, movingAverage1,movingAverage
             side='left'
             max={valueHigh}
             min={valueLow}
-        />,[context.isRunning,valueHigh,valueLow,displayValue]
+        />,[context.isRunning,displayValue]
     );
 
     const ChartCallback = useCallback(() => {

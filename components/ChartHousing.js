@@ -59,7 +59,7 @@ export const ChartHousing = () => {
                 />
             }
         </Suspense>),
-        [context.floorId, context.isRunning,asset.assetName,periods, movingAverage1,displayPrice,displayValue,displayMovingAverages,displayType]);
+        [context.floorId, context.isRunning,asset.assetName,periods,displayPrice,displayValue,displayMovingAverages,displayType]);
 
     return <div
             style={{marginTop: '1em'}}
